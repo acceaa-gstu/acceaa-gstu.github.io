@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACCEAA, GSTU — Alumni Association</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --ink:#14213D; --ink-2:#1F2F52; --brass:#C9A227; --brass-soft:#E4C766;
+    --paper:#F3F2ED; --paper-2:#FFFFFF; --muted:#5B6472; --line:#DDD9CC; --ok:#3F7859; --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.display{font-family:'Fraunces',serif; font-weight:600; letter-spacing:-0.01em; margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  p{line-height:1.65;}
+
+  header.topbar{position:sticky; top:0; z-index:50; background:var(--ink); color:#fff; padding:0 32px;
+    display:flex; align-items:center; justify-content:space-between; height:64px; border-bottom:3px solid var(--brass);}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{width:34px;height:34px;border-radius:50%; background:var(--brass); display:flex;align-items:center;justify-content:center;
+    color:var(--ink); font-family:'Fraunces',serif; font-weight:700; font-size:14px;}
+  .brand-name{font-family:'Fraunces',serif; font-size:15.5px; font-weight:600; line-height:1.15;}
+  .brand-sub{font-size:10.5px; color:#B9C2D4; letter-spacing:.06em; text-transform:uppercase;}
+  nav.tabs{display:flex; gap:2px;}
+  nav.tabs button{background:transparent; border:none; color:#C7CEDD; font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+    padding:9px 12px; cursor:pointer; border-radius:4px; transition:.15s; white-space:nowrap;}
+  nav.tabs button:hover{color:#fff; background:rgba(255,255,255,.06);}
+  nav.tabs button.active{color:var(--ink); background:var(--brass-soft);}
+
+  main{max-width:1120px; margin:0 auto; padding:40px 32px 80px;}
+  section{display:none;}
+  section.active{display:block; animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--brass); font-weight:500; margin-bottom:12px; display:block;}
+  .section-head{margin:56px 0 18px;}
+  .section-head:first-child{margin-top:0;}
+  .section-head h2{font-size:22px;}
+  .section-head p{color:var(--muted); font-size:13.5px; margin:6px 0 0; max-width:600px;}
+  .section-foot{margin-top:14px;}
+
+  .btn{font-family:'Inter',sans-serif; font-weight:600; font-size:14px; padding:12px 20px; border-radius:var(--radius);
+    border:none; cursor:pointer; transition:.15s;}
+  .btn-primary{background:var(--ink); color:#fff;} .btn-primary:hover{background:var(--ink-2);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line);} .btn-ghost:hover{border-color:var(--ink);}
+  .btn-sm{padding:7px 14px; font-size:12.5px;}
+
+  /* ---------- HOME ---------- */
+  .welcome-card{display:grid; grid-template-columns:1fr 1.1fr; gap:0; border-radius:12px; overflow:hidden; border:1px solid var(--line);}
+  .welcome-photo{background:linear-gradient(135deg,var(--ink),var(--ink-2)); min-height:280px; display:flex; align-items:center; justify-content:center; position:relative;}
+  .welcome-photo::after{content:"Welcome photo placeholder"; color:rgba(255,255,255,.55); font-family:'IBM Plex Mono',monospace; font-size:11.5px;}
+  .welcome-photo .wm{position:absolute; width:120px; height:120px; border-radius:50%; border:2px solid var(--brass-soft); top:24px; left:24px; opacity:.5;}
+  .welcome-body{background:var(--paper-2); padding:36px; display:flex; flex-direction:column; justify-content:center;}
+  .welcome-body h1{font-size:30px; line-height:1.2;}
+  .welcome-body p{color:var(--muted); font-size:14.5px; margin-top:12px;}
+  .welcome-actions{margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;}
+
+  .cta-banner{margin-top:20px; background:var(--ink); color:#fff; border-radius:10px; padding:22px 26px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .cta-banner h3{font-size:16px; color:#fff;}
+  .cta-banner p{font-size:12.5px; color:#B9C2D4; margin:4px 0 0;}
+  .cta-banner .btn-primary{background:var(--brass); color:var(--ink);}
+  .cta-banner .btn-primary:hover{background:var(--brass-soft);}
+
+  .ach-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px;}
+  .ach-card{background:var(--paper-2); border:1px solid var(--line); border-radius:12px; overflow:hidden; transition:.15s;}
+  .ach-card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(20,33,61,.12);}
+  .ach-photo{width:100%; height:150px; background:linear-gradient(135deg,var(--ink-2),var(--ink)); background-size:cover; background-position:center;
+    position:relative; display:flex; align-items:center; justify-content:center;}
+  .ach-photo::before{content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(20,33,61,.55), rgba(20,33,61,.1) 65%);}
+  .ach-default-logo{position:relative; z-index:1; width:58px; height:58px; border-radius:50%; background:var(--brass); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:700; font-size:22px; box-shadow:0 4px 14px rgba(0,0,0,.25);}
+  .ach-tag-badge{position:absolute; top:10px; left:10px; z-index:2; background:var(--brass); color:var(--ink); font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; padding:4px 11px; border-radius:20px; font-weight:700;}
+  .ach-body{padding:16px 18px 18px;}
+  .ach-body h3{font-size:14.5px; margin-bottom:6px;}
+  .ach-body p{font-size:12.5px; color:var(--muted); margin:0; line-height:1.55;}
+
+  .news-strip{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px;}
+  .news-card{background:var(--paper-2); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+  .news-photo{height:100px; background:linear-gradient(135deg,var(--brass-soft),var(--brass)); display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(20,33,61,.55);}
+  .news-body{padding:16px;}
+  .news-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--brass); letter-spacing:.06em;}
+  .news-card h3{font-size:14.5px; margin:8px 0 6px;}
+  .news-card p{font-size:12.5px; color:var(--muted); margin:0;}
+
+  .fee-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;}
+  .fee-card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; padding:22px; position:relative;}
+  .fee-card.featured{border-color:var(--brass); box-shadow:0 4px 16px rgba(201,162,39,.15);}
+  .fee-card h3{font-size:16px;}
+  .fee-price{font-family:'Fraunces',serif; font-size:26px; margin:10px 0; color:var(--ink-2);}
+  .fee-price span{font-size:12px; color:var(--muted); font-family:'Inter',sans-serif;}
+  .fee-card ul{margin:12px 0 0; padding-left:18px; font-size:12.5px; color:var(--muted); line-height:1.7;}
+
+  .how-to-join{background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--brass); border-radius:8px;
+    padding:22px 26px; margin-top:26px; max-width:640px;}
+  .how-to-join h3{font-size:15.5px; margin-bottom:8px; color:var(--ink-2);}
+  .how-to-join p{font-size:13.5px; color:var(--muted); margin:0 0 16px; max-width:none;}
+
+  .notice-card{display:flex; align-items:center; gap:16px; background:var(--paper-2); border:1px solid var(--line); border-radius:8px;
+    padding:16px 20px; margin-bottom:10px;}
+  .notice-icon{width:40px; height:40px; border-radius:8px; background:var(--ink); color:var(--brass-soft); flex:0 0 40px;
+    display:flex; align-items:center; justify-content:center; font-size:16px;}
+  .notice-body{flex:1; min-width:0;}
+  .notice-body h4{font-size:14px; margin:0 0 4px; color:var(--ink-2);}
+  .notice-body p{font-size:12.5px; color:var(--muted); margin:0;}
+  .notice-empty{font-size:13px; color:var(--muted); padding:12px 0;}
+
+  .faq-item{border-bottom:1px solid var(--line); padding:14px 0;}
+  .faq-item summary{cursor:pointer; font-weight:600; font-size:14.5px; color:var(--ink-2); list-style:none; display:flex; justify-content:space-between; align-items:center;}
+  .faq-item summary::after{content:"+"; font-family:'Fraunces',serif; font-size:20px; color:var(--brass);}
+  .faq-item[open] summary::after{content:"–";}
+  .faq-item p{font-size:13.5px; color:var(--muted); margin-top:10px; padding-right:24px;}
+
+  .partner-row{display:flex; gap:16px; flex-wrap:wrap;}
+  .partner-tile{flex:1; min-width:150px; background:var(--paper-2); border:1px solid var(--line); border-radius:8px; padding:22px; text-align:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted);}
+  .partner-tile .pt-mark{width:38px; height:38px; border-radius:8px; background:var(--ink); color:var(--brass-soft); margin:0 auto 10px;
+    display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:700; font-size:14px;}
+
+  .bottom-card{margin-top:8px; background:var(--ink); color:#fff; border-radius:10px; padding:26px 30px; display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap;}
+  .bottom-item{display:flex; gap:10px; align-items:flex-start;}
+  .bottom-item .lbl{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--brass-soft); text-transform:uppercase; letter-spacing:.06em;}
+  .bottom-item .val{font-size:13.5px; margin-top:2px;}
+
+  /* ---------- ABOUT (premium editorial) ---------- */
+  .about-hero{padding:6px 0 32px; border-bottom:1px solid var(--line); margin-bottom:6px;}
+  .about-hero h1{font-size:34px; line-height:1.16; max-width:660px; margin-top:12px;}
+  .about-hero .lead{color:var(--muted); font-size:15px; max-width:620px; margin-top:14px;}
+  .about-stats{display:flex; gap:30px; margin:26px 0 18px; flex-wrap:wrap;}
+  .about-stat{border-left:2px solid var(--brass); padding-left:14px;}
+  .about-stat .num{font-family:'Fraunces',serif; font-size:24px; color:var(--ink-2); line-height:1;}
+  .about-stat .lbl{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; font-family:'IBM Plex Mono',monospace; margin-top:4px;}
+  .pill-row{display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;}
+  .pill{font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--paper-2); border:1px solid var(--line); padding:5px 12px; border-radius:20px; color:var(--muted);}
+
+  .dossier{display:grid; grid-template-columns:70px 1fr; gap:22px; padding:34px 0; border-bottom:1px solid var(--line);}
+  .dossier:last-of-type{border-bottom:none;}
+  .dossier-num{font-family:'Fraunces',serif; font-size:36px; color:var(--brass); line-height:1;}
+  .dossier-content h3{font-size:18px; color:var(--ink-2); margin-bottom:14px;}
+  .dossier-content p{color:var(--muted); font-size:14px; max-width:700px;}
+  .obj-item{display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);}
+  .obj-num{font-family:'IBM Plex Mono',monospace; color:var(--brass); font-weight:500; flex:0 0 28px;}
+  .obj-item p{margin:0; font-size:13.5px; color:var(--ink-2); max-width:none;}
+
+  .goal-quote{font-family:'Fraunces',serif; font-style:italic; font-size:19px; color:var(--ink-2); line-height:1.55;
+    max-width:680px; border-left:3px solid var(--brass); padding-left:20px;}
+
+  .milestone-block{background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--brass);
+    border-radius:8px; padding:20px 24px; max-width:720px;}
+  .milestone-block p{color:var(--ink-2); font-size:14px; margin:0; max-width:none;}
+
+  .func-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;}
+  .func-item{background:var(--paper-2); border:1px solid var(--line); border-radius:8px; padding:14px 16px 14px 40px;
+    font-size:13px; color:var(--ink-2); position:relative;}
+  .func-item::before{content:"◆"; position:absolute; left:15px; top:15px; color:var(--brass); font-size:10px;}
+
+  @media(max-width:640px){
+    .dossier{grid-template-columns:1fr; gap:8px;}
+    .dossier-num{font-size:26px;}
+  }
+
+  /* ---------- COMMITTEE ---------- */
+  .committee-term{display:flex; justify-content:space-between; align-items:baseline; margin:0 0 6px;}
+  .term-label{font-size:13px; color:var(--muted);}
+  .exec-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; margin-top:16px;}
+  .exec-card{background:var(--paper-2); border:1px solid var(--line); border-radius:12px; overflow:hidden; text-align:center; transition:.15s;}
+  .exec-card:hover{transform:translateY(-3px); box-shadow:0 8px 22px rgba(20,33,61,.1);}
+  .exec-photo{height:150px; background:linear-gradient(135deg,var(--ink-2),var(--ink)); display:flex; align-items:center; justify-content:center;
+    color:var(--brass-soft); font-family:'Fraunces',serif; font-weight:600; font-size:32px;}
+  .exec-info{padding:16px 14px 20px;}
+  .exec-info h3{font-size:15px;}
+  .exec-role{font-size:11.5px; color:var(--brass); font-family:'IBM Plex Mono',monospace; margin-top:5px; text-transform:uppercase; letter-spacing:.03em;}
+  .exec-batch{font-size:11.5px; color:var(--muted); margin-top:6px;}
+  .exec-social{display:flex; gap:8px; justify-content:center; margin:14px 0 4px;}
+  .soc-btn{width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;
+    color:#fff; text-decoration:none; font-family:'Inter',sans-serif;}
+  .soc-li{background:#0A66C2;} .soc-fb{background:#1877F2;} .soc-em{background:var(--muted);} .soc-ph{background:var(--ok);}
+  .view-profile{margin-top:8px; width:100%; background:var(--paper); color:var(--ink); border:1px solid var(--line); font-size:12.5px; padding:9px; border-radius:6px; cursor:pointer; font-weight:600;}
+  .view-profile:hover{border-color:var(--brass);}
+  .archive-toggle{margin-top:32px; border-top:1.5px solid var(--ink); padding-top:16px;}
+  .archive-toggle summary{cursor:pointer; font-weight:600; font-size:14px; color:var(--ink-2); list-style:none;}
+  .archive-toggle summary::before{content:"▸ "; color:var(--brass);}
+  .archive-toggle[open] summary::before{content:"▾ ";}
+
+  /* ---------- MEMBERS ---------- */
+  .dir-controls{display:flex; gap:12px; margin:16px 0 20px; flex-wrap:wrap;}
+  .dir-controls input, .dir-controls select{font-family:'Inter',sans-serif; font-size:14px; padding:10px 14px; border:1.5px solid var(--line); border-radius:var(--radius); background:#fff;}
+  .dir-controls input{flex:1; min-width:200px;}
+  .grid-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px;}
+  .card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; overflow:hidden; cursor:pointer; transition:.15s;}
+  .card:hover{border-color:var(--brass); transform:translateY(-2px); box-shadow:0 6px 18px rgba(20,33,61,.08);}
+  .card-photo{height:110px; background:linear-gradient(135deg,var(--ink-2),var(--ink)); display:flex; align-items:center; justify-content:center;
+    color:var(--brass-soft); font-family:'Fraunces',serif; font-weight:600; font-size:22px;}
+  .card-body{padding:16px;}
+  .card h3{font-size:15px;} .card .role{color:var(--muted); font-size:12.5px; margin-top:2px;}
+  .tags{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
+  .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; background:var(--paper); border:1px solid var(--line); padding:3px 8px; border-radius:20px; color:var(--muted);}
+
+  /* ---------- EVENTS ---------- */
+  .filter-row{display:flex; gap:8px; margin:16px 0 22px;}
+  .chip{font-size:12.5px; font-family:'Inter',sans-serif; padding:7px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; cursor:pointer;}
+  .chip.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .event-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px;}
+  .event-card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .event-photo{height:150px; background:linear-gradient(135deg,var(--brass-soft),var(--brass)); display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(20,33,61,.55); position:relative;}
+  .event-date-badge{position:absolute; top:12px; left:12px; background:var(--ink); color:#fff; border-radius:6px; padding:6px 10px; text-align:center;}
+  .event-date-badge .d{font-family:'Fraunces',serif; font-size:17px; line-height:1;}
+  .event-date-badge .m{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase;}
+  .event-body{padding:18px;}
+  .event-body h3{font-size:16px; margin-bottom:8px;}
+  .event-body p{color:var(--muted); font-size:13.5px; line-height:1.6; margin:0;}
+  .kind-tag{font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; color:var(--brass); margin-left:8px;}
+
+  /* ---------- FORM ---------- */
+  .form-wrap{max-width:580px;}
+  .form-wrap.wide{max-width:760px;}
+  .form-note{background:#EFF3EE; border:1px solid #C9DDC7; color:var(--ok); font-size:13.5px; padding:12px 16px; border-radius:var(--radius); margin-bottom:22px; line-height:1.5;}
+  .field{margin-bottom:16px; flex:1; min-width:170px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; margin-bottom:6px; color:var(--ink-2);}
+  .field input, .field select, .field textarea{width:100%; font-family:'Inter',sans-serif; font-size:14px; padding:10px 14px; border:1.5px solid var(--line); border-radius:var(--radius); background:#fff;}
+  .field input:focus, .field select:focus, .field textarea:focus, .dir-controls input:focus{outline:2px solid var(--brass); outline-offset:1px;}
+  .photo-drop{border:1.5px dashed var(--line); border-radius:var(--radius); padding:22px; text-align:center; color:var(--muted); font-size:13px; cursor:pointer;}
+  .photo-drop:hover{border-color:var(--brass); color:var(--ink);}
+  .success-box{display:none; background:var(--ink); color:#fff; padding:16px 18px; border-radius:8px; margin-top:18px; font-size:13.5px; line-height:1.5; border-left:4px solid var(--brass);}
+
+  .form-section{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; padding:24px 26px; margin-bottom:20px;}
+  .form-section-title{font-size:14.5px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.04em; font-family:'IBM Plex Mono',monospace;
+    padding-bottom:12px; margin-bottom:18px; border-bottom:1px solid var(--line);}
+  .field-row{display:flex; gap:18px; flex-wrap:wrap;}
+  .field-row.two .field{flex-basis:calc(50% - 9px);}
+
+  .photo-upload{display:flex; align-items:center; gap:18px; border:1.5px dashed var(--line); border-radius:10px; padding:18px; cursor:pointer; transition:.15s;}
+  .photo-upload:hover{border-color:var(--brass); background:var(--paper);}
+  .photo-preview{width:64px; height:64px; border-radius:50%; background:var(--paper); border:1px solid var(--line); flex:0 0 64px;
+    display:flex; align-items:center; justify-content:center; font-size:24px; overflow:hidden; background-size:cover; background-position:center;}
+  .photo-upload-text{display:flex; flex-direction:column; gap:2px;}
+  .photo-upload-text strong{font-size:13.5px; color:var(--ink-2);}
+  .photo-upload-text span{font-size:12px; color:var(--muted);}
+
+  /* ---------- CONTACT ---------- */
+  .contact-grid{display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:8px;}
+  .contact-line{display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); font-size:14px;}
+  .contact-line .label{color:var(--muted); flex:0 0 90px; font-size:12.5px; text-transform:uppercase; font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- MODAL ---------- */
+  .modal-bg{display:none; position:fixed; inset:0; background:rgba(20,33,61,.55); z-index:100; align-items:center; justify-content:center; padding:20px;}
+  .modal{background:#fff; border-radius:10px; max-width:400px; width:100%; padding:30px; border-top:4px solid var(--brass);}
+  .modal h3{font-size:20px; margin-bottom:4px;} .modal .role{color:var(--muted); font-size:13.5px; margin-bottom:18px;}
+  .modal-row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px;}
+  .modal-row span:first-child{color:var(--muted);}
+  .modal-close{margin-top:18px; width:100%;}
+
+  footer{text-align:center; padding:26px; color:var(--muted); font-size:12px; border-top:1px solid var(--line);}
+  .staff-link{color:var(--muted); text-decoration:underline; cursor:pointer; font-size:11px; opacity:.6;}
+  .staff-link:hover{opacity:1;}
+
+  /* ---------- ADMIN ---------- */
+  .admin-topbar{position:sticky; top:0; z-index:50; background:var(--ink); color:#fff; padding:0 32px; height:64px;
+    display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid var(--brass);}
+  .back-to-site{color:#C7CEDD; font-size:13px; cursor:pointer;}
+  .back-to-site:hover{color:#fff;}
+  .login-box{max-width:340px; margin:40px auto; background:var(--paper-2); border:1px solid var(--line); border-radius:10px; padding:28px; text-align:center;}
+  .login-box h3{font-size:17px; margin-bottom:6px;}
+  .login-box p{font-size:12.5px; color:var(--muted); margin-bottom:20px;}
+  .admin-shell{display:none;}
+  .admin-shell.active{display:block;}
+  .admin-topline{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--line);}
+  .role-badge{font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--brass-soft); color:var(--ink); padding:5px 12px; border-radius:20px; font-weight:600;}
+  .admin-panels{display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap;}
+  .admin-panel-btn{padding:9px 16px; border-radius:6px; border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:13px; font-weight:500;}
+  .admin-panel-btn.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .locked-note{font-size:12.5px; color:var(--muted); background:var(--paper); border:1px dashed var(--line); padding:14px; border-radius:6px; margin-bottom:16px;}
+  .pend-row{display:flex; align-items:center; justify-content:space-between; gap:16px; background:var(--paper-2); border:1px solid var(--line); border-radius:8px; padding:14px 18px; margin-bottom:10px;}
+  .pend-info{display:flex; align-items:center; gap:12px;}
+  .pend-meta{font-size:12px; color:var(--muted);}
+  .approve-btn{background:var(--ok); color:#fff; border:none; padding:7px 14px; border-radius:5px; font-size:12.5px; font-weight:600; cursor:pointer;}
+  .approve-btn:hover{opacity:.9;}
+  .admin-form-row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;}
+  .admin-form-row input, .admin-form-row select{padding:9px 12px; border:1.5px solid var(--line); border-radius:5px; font-size:13px;}
+  .member-table{width:100%; border-collapse:collapse; font-size:13px; min-width:640px;}
+  .member-table th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; color:var(--muted);
+    padding:10px 12px; border-bottom:2px solid var(--line);}
+  .member-table td{padding:11px 12px; border-bottom:1px solid var(--line); color:var(--ink-2);}
+  .member-table tr:hover td{background:var(--paper); cursor:pointer;}
+
+  /* ---------- MOBILE NAV ---------- */
+  .hamburger{display:none; background:none; border:none; color:#fff; font-size:22px; cursor:pointer; padding:4px 6px; line-height:1;}
+
+  /* ---------- COMPACT FOOTER ---------- */
+  .site-footer{background:var(--ink); color:#fff; border-top:3px solid var(--brass); margin-top:20px;}
+  .footer-inner{max-width:1120px; margin:0 auto; padding:20px 32px 0;}
+  .footer-row{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+    padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.12);}
+  .footer-brand-compact{display:flex; align-items:center; gap:9px; font-family:'Fraunces',serif; font-size:14.5px; font-weight:600; white-space:nowrap;}
+  .footer-links{display:flex; gap:4px; flex-wrap:wrap;}
+  .footer-links button{background:none; border:none; color:#C7CEDD; font-size:12.5px; font-family:'Inter',sans-serif;
+    cursor:pointer; padding:6px 10px; border-radius:4px;}
+  .footer-links button:hover{color:#fff; background:rgba(255,255,255,.06);}
+  .footer-social{display:flex; gap:6px;}
+  .footer-social .soc-btn{width:24px; height:24px; font-size:10px;}
+  .footer-bottom{display:flex; justify-content:space-between; align-items:center; padding:12px 0; flex-wrap:wrap; gap:8px;}
+  .footer-bottom span{font-size:11px; color:#8D97AC;}
+  .footer-bottom .staff-link{color:#8D97AC; opacity:1;}
+  .footer-bottom .staff-link:hover{color:#fff;}
+
+  @media(max-width:960px){
+    .hamburger{display:block;}
+    nav.tabs{
+      display:none; position:absolute; top:64px; left:0; right:0; background:var(--ink);
+      flex-direction:column; padding:8px; border-bottom:3px solid var(--brass); z-index:49;
+      box-shadow:0 12px 24px rgba(0,0,0,.2);
+    }
+    nav.tabs.open{display:flex;}
+    nav.tabs button{width:100%; text-align:left; padding:13px 14px; font-size:14.5px;}
+  }
+  @media(max-width:1024px){
+    main{padding:34px 24px 70px;}
+  }
+  @media(max-width:900px){
+    .welcome-card, .contact-grid, .func-grid{grid-template-columns:1fr;}
+    header.topbar{padding:0 16px;}
+  }
+  @media(max-width:640px){
+    main{padding:24px 14px 60px;}
+    .welcome-photo{min-height:190px;}
+    .cta-banner{flex-direction:column; align-items:flex-start;}
+    .footer-row{justify-content:flex-start;}
+    .footer-links{gap:0; width:100%;}
+    .footer-links button{padding:6px 8px; font-size:12px;}
+    .footer-inner{padding:16px 16px 0;}
+    .footer-bottom{flex-direction:column; align-items:flex-start; gap:6px;}
+    .admin-form-row{grid-template-columns:1fr;}
+    .partner-tile{min-width:calc(50% - 8px);}
+    .field-row{flex-direction:column; gap:0;}
+    .field-row.two .field{flex-basis:100%;}
+    .form-section{padding:18px;}
+  }
+  @media(max-width:420px){
+    .partner-tile{min-width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar" id="mainHeader">
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div><div class="brand-name">ACCEAA, GSTU</div><div class="brand-sub">Alumni Association</div></div>
+  </div>
+  <nav class="tabs" id="navTabs">
+    <button data-tab="home" class="active">Home</button>
+    <button data-tab="about">About Us</button>
+    <button data-tab="committee">Executive Committee</button>
+    <button data-tab="members">Members</button>
+    <button data-tab="events">Events / News</button>
+    <button data-tab="submit">Submit / Update</button>
+    <button data-tab="contact">Contact Us</button>
+  </nav>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Menu">☰</button>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section id="home" class="active">
+
+    <div class="welcome-card">
+      <div class="welcome-photo"><div class="wm"></div></div>
+      <div class="welcome-body">
+        <span class="eyebrow">Dept. of Applied Chemistry & Chemical Engineering, GSTU</span>
+        <h1>Welcome to ACCEAA, GSTU</h1>
+        <p>We are proud to bring together every graduate of the Department of Applied Chemistry and Chemical Engineering under one association — built on friendship, mentorship, and a shared commitment to the Department's growth.</p>
+        <div class="welcome-actions">
+          <button class="btn btn-primary" onclick="switchTab('members')">Become a Member</button>
+          <button class="btn btn-ghost" onclick="switchTab('about')">Learn More</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-banner">
+      <div><h3>Keep your alumni profile up to date</h3><p>New job, new city, new degree — let your batchmates find you.</p></div>
+      <button class="btn btn-primary" onclick="switchTab('submit')">Submit / Update My Info</button>
+    </div>
+
+    <div class="section-head">
+      <h2>Recent Achievements</h2>
+      <p>Celebrating our alumni's career milestones and academic pursuits.</p>
+    </div>
+    <div class="ach-grid" id="achGrid"></div>
+    <div class="section-foot"><button class="btn btn-ghost btn-sm" onclick="goToAchievementsHistory()">See More</button></div>
+
+    <div class="section-head">
+      <h2>Recent News &amp; Blog</h2>
+    </div>
+    <div class="news-strip" id="homeNewsStrip"></div>
+    <div class="section-foot"><button class="btn btn-ghost btn-sm" onclick="switchTab('events')">View all news &amp; events</button></div>
+
+    <div class="section-head">
+      <h2>Executive Committee</h2>
+    </div>
+    <div class="exec-grid" id="execGridHome"></div>
+    <div class="section-foot"><button class="btn btn-ghost btn-sm" onclick="switchTab('committee')">View full committee</button></div>
+
+    <div class="section-head">
+      <h2>Membership</h2>
+    </div>
+    <div class="fee-grid" id="feeGridHome"></div>
+    <div class="section-foot"><button class="btn btn-ghost btn-sm" onclick="switchTab('members')">See full membership details</button></div>
+
+    <div class="section-head">
+      <h2>Frequently Asked Questions</h2>
+    </div>
+    <div id="faqList"></div>
+
+    <div class="section-head">
+      <h2>Our Esteemed Partners</h2>
+      <p>We proudly collaborate with institutions and organizations committed to the growth of our Department and its graduates.</p>
+    </div>
+    <div class="partner-row" id="partnerRow"></div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="about-hero">
+      <span class="eyebrow">Founding Charter · GSTU</span>
+      <h1>About the Association</h1>
+      <p class="lead">A non-political, non-profit, voluntary organization uniting every graduate of the Department of Applied Chemistry and Chemical Engineering — built on friendship, mentorship, and a shared responsibility to the Department's future.</p>
+      <div class="about-stats">
+        <div class="about-stat"><div class="num">2024</div><div class="lbl">Founded</div></div>
+        <div class="about-stat"><div class="num">06</div><div class="lbl">Core Objectives</div></div>
+        <div class="about-stat"><div class="num">09</div><div class="lbl">Executive Roles</div></div>
+        <div class="about-stat"><div class="num">03</div><div class="lbl">Membership Tiers</div></div>
+      </div>
+      <div class="pill-row"><span class="pill">Non-political</span><span class="pill">Non-profit</span><span class="pill">Voluntary</span></div>
+    </div>
+
+    <div class="dossier">
+      <div class="dossier-num">01</div>
+      <div class="dossier-content">
+        <h3>About the Association</h3>
+        <p>The Applied Chemistry and Chemical Engineering Alumni Association, GSTU (ACCEAA, GSTU) is a non-political, non-profit, and voluntary organization composed of individuals who have completed graduation from the Department of Applied Chemistry and Chemical Engineering (ACCE), Gopalganj Science and Technology University (GSTU). It was formally adopted by its founding members at a General Assembly, with the shared purpose of building a lasting bond of friendship and cooperation among graduates, accelerating the professional development of its members, and contributing meaningfully to the advancement of the Department and the University.</p>
+      </div>
+    </div>
+
+    <div class="dossier">
+      <div class="dossier-num">02</div>
+      <div class="dossier-content">
+        <h3>Our Objective</h3>
+        <div id="objList"></div>
+      </div>
+    </div>
+
+    <div class="dossier">
+      <div class="dossier-num">03</div>
+      <div class="dossier-content">
+        <h3>Our Goal</h3>
+        <div class="goal-quote">"To build a permanent, self-sustaining bridge between the Department and every graduate who has passed through it — one that outlives any single batch or committee, and makes ACCEAA, GSTU the natural first place an alumnus turns to for mentorship, connection, and belonging."</div>
+      </div>
+    </div>
+
+    <div class="dossier">
+      <div class="dossier-num">04</div>
+      <div class="dossier-content">
+        <h3>Our Function</h3>
+        <p>In practice, the Association carries out its objectives through a defined governing structure and a regular calendar of activity:</p>
+        <div class="func-grid">
+          <div class="func-item">Holding an Annual General Meeting to review activities and approve accounts.</div>
+          <div class="func-item">Organizing at least one annual reunion, along with seminars, workshops, and social events.</div>
+          <div class="func-item">Running career counselling, mentorship, scholarships, and internship support for current students.</div>
+          <div class="func-item">Maintaining a public alumni directory and record of members' contributions and achievements.</div>
+          <div class="func-item">Managing Association funds transparently, with quarterly accounts and an annual audit.</div>
+          <div class="func-item">Electing a new Executive Committee every two years through an independent Election Commission.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dossier">
+      <div class="dossier-num">05</div>
+      <div class="dossier-content">
+        <h3>Our Achievement</h3>
+        <div class="milestone-block"><p>As a newly founded association, our early achievements have been foundational: successfully forming a founding Executive Committee with representation from every graduated batch, adopting our founding Constitution, and beginning the work of building a unified alumni directory. We are now preparing for our first Annual General Meeting and our first full committee election, alongside our first organized reunion — the first of many milestones we look forward to sharing here.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMITTEE -->
+  <section id="committee">
+    <h2 style="font-size:26px;">Executive Committee</h2>
+    <div class="committee-term">
+      <h3 style="font-size:15px;">Current Committee</h3>
+      <span class="term-label">Founding term · 2024–2026</span>
+    </div>
+    <div class="exec-grid" id="execGrid"></div>
+
+    <details class="archive-toggle">
+      <summary>Previous committees</summary>
+      <div id="archivedCommitteeList"><p style="font-size:12.5px; color:var(--muted); margin:10px 0;">No prior committees yet — this is the founding term. Once the first election is held, past committees will be archived here for reference.</p></div>
+    </details>
+  </section>
+
+  <!-- MEMBERS -->
+  <section id="members">
+    <h2 style="font-size:26px;">Membership</h2>
+    <div class="fee-grid">
+      <div class="fee-card">
+        <h3>General Membership</h3>
+        <div class="fee-price">৳250 <span>one-time</span></div>
+        <ul><li>Open to any ACCE graduate</li><li>Voting rights</li><li>Right to contest elections</li></ul>
+      </div>
+      <div class="fee-card featured">
+        <h3>Life Membership</h3>
+        <div class="fee-price">৳2,500 <span>renews every 5 yrs</span></div>
+        <ul><li>All General Member benefits</li><li>Renewal fee set at time of renewal</li><li>Recognized as a long-term supporter</li></ul>
+      </div>
+      <div class="fee-card">
+        <h3>Honorary Membership</h3>
+        <div class="fee-price">— <span>by invitation</span></div>
+        <ul><li>Conferred by Executive Committee</li><li>For teachers & distinguished well-wishers</li><li>No voting rights (unless GA decides)</li></ul>
+      </div>
+    </div>
+    <p style="font-size:12.5px; color:var(--muted); max-width:560px;">Fees shown here are for reference only. Payment and processing is handled directly through the department office.</p>
+
+    <div class="how-to-join">
+      <h3>How to Become a Member</h3>
+      <p>Download the membership form below, fill it out, and submit the printed hardcopy to the department office along with your applicable fee. Membership is confirmed once your form is reviewed and approved by the office.</p>
+      <button class="btn btn-primary btn-sm" onclick="downloadMembershipForm()">Download Membership Form (PDF)</button>
+    </div>
+
+    <div class="section-head" style="margin-top:44px;">
+      <h2>Notices</h2>
+    </div>
+    <div id="noticeList"></div>
+
+    <h3 style="font-size:18px; margin:44px 0 4px;">Alumni Directory</h3>
+    <p style="font-size:13px; color:var(--muted); margin-top:0;">Search current members by batch, degree, or location.</p>
+    <div class="dir-controls">
+      <input id="searchBox" type="text" placeholder="Search by name, job, or location…">
+      <select id="batchFilter"><option value="">All batches</option></select>
+      <select id="degreeFilter"><option value="">All degrees</option></select>
+    </div>
+    <div class="grid-cards" id="cardGrid"></div>
+  </section>
+
+  <!-- EVENTS/NEWS -->
+  <section id="events">
+    <h2 style="font-size:26px;">Events & News</h2>
+    <p style="color:var(--muted); font-size:14px; margin-top:6px;">Reunions, seminars, and updates from the Association.</p>
+    <div class="filter-row">
+      <button class="chip active" data-kind="all">All</button>
+      <button class="chip" data-kind="event">Events</button>
+      <button class="chip" data-kind="news">News</button>
+      <button class="chip" data-kind="achievement">Achievements</button>
+    </div>
+    <div class="event-grid" id="eventList"></div>
+  </section>
+
+  <!-- SUBMIT -->
+  <section id="submit">
+    <h2 style="font-size:24px;">Submit / Update Your Info</h2>
+    <div class="form-wrap wide">
+      <div class="form-note">No login needed. Fill this in whenever your details change — the department office reviews each entry before it appears in the directory.</div>
+      <form id="alumniForm">
+
+        <div class="form-section">
+          <h3 class="form-section-title">Basic Information</h3>
+          <div class="field-row">
+            <div class="field"><label>Full Name *</label><input id="fFullName" required placeholder="Your full name"></div>
+            <div class="field"><label>Father's Name *</label><input id="fFatherName" required placeholder="Your father's name"></div>
+            <div class="field"><label>Mother's Name *</label><input id="fMotherName" required placeholder="Your mother's name"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Gender *</label>
+              <select id="fGender" required><option value="">Select gender</option><option>Male</option><option>Female</option><option>Other</option></select>
+            </div>
+            <div class="field"><label>Date of Birth *</label><input id="fDob" required type="date"></div>
+            <div class="field"><label>Blood Group</label>
+              <select id="fBloodGroup"><option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Religion</label><input id="fReligion" placeholder="Enter your religion"></div>
+            <div class="field"><label>NID</label><input id="fNid" type="number" placeholder="Enter your NID number"></div>
+            <div class="field"><label>Nationality</label><input id="fNationality" placeholder="Enter your nationality"></div>
+            <div class="field"><label>Marital Status</label>
+              <select id="fMaritalStatus"><option value="">Select marital status</option><option>Single</option><option>Married</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Contact Information</h3>
+          <div class="field-row two">
+            <div class="field"><label>Mailing Address *</label><input id="fMailingAddress" required placeholder="Enter your mailing address"></div>
+            <div class="field"><label>Permanent Address *</label><input id="fPermanentAddress" required placeholder="Enter your permanent address"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Email *</label><input id="fEmail" required type="email" placeholder="Enter your email address"></div>
+            <div class="field"><label>Land Phone</label><input id="fLandPhone" placeholder="Enter your land phone number"></div>
+            <div class="field"><label>Mobile Phone *</label><input id="fMobilePhone" required placeholder="Enter your mobile phone number"></div>
+          </div>
+          <div class="field-row two">
+            <div class="field"><label>Website (if any)</label><input id="fWebsite" placeholder="Enter your website URL"></div>
+            <div class="field"><label>LinkedIn</label><input id="fLinkedin" placeholder="Your LinkedIn profile URL"></div>
+          </div>
+          <div class="field-row two">
+            <div class="field"><label>Facebook</label><input id="fFacebook" placeholder="Your Facebook profile URL"></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Academic Information</h3>
+          <div class="field-row">
+            <div class="field"><label>Programme *</label>
+              <select id="fProgramme" required><option value="">Select programme</option><option>B.Sc. in Applied Chemistry & Chemical Engineering</option><option>M.Sc.</option><option>PhD</option></select>
+            </div>
+            <div class="field"><label>Student ID *</label><input id="fStudentId" required placeholder="e.g. 1801001"></div>
+            <div class="field"><label>Passing Year *</label><input id="fPassingYear" required type="number" min="1990" max="2026" placeholder="e.g. 2019"></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Career Details</h3>
+          <div class="field-row two">
+            <div class="field"><label>Name of the Organization</label><input id="fOrganization" placeholder="e.g. Square Pharmaceuticals"></div>
+            <div class="field"><label>Current Designation</label><input id="fDesignation" placeholder="e.g. Process Engineer"></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Photo</h3>
+          <div class="photo-upload" id="photoUploadArea" onclick="document.getElementById('photoInput').click()">
+            <div class="photo-preview" id="photoPreview">
+              <span id="photoPlaceholderIcon">📷</span>
+            </div>
+            <div class="photo-upload-text">
+              <strong>Choose Photo</strong>
+              <span>Click to upload a recent photograph (JPG or PNG)</span>
+            </div>
+          </div>
+          <input type="file" id="photoInput" accept="image/*" style="display:none">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;">Submit for Review</button>
+      </form>
+      <div class="success-box" id="successBox">Thank you — your information has been sent to the department office for review, and will appear in the directory once approved.</div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <h2 style="font-size:26px;">Contact Us</h2>
+    <div class="contact-grid">
+      <div>
+        <div class="contact-line"><span class="label">Office</span><span>Dept. of Applied Chemistry & Chemical Engineering, GSTU, Gopalganj</span></div>
+        <div class="contact-line"><span class="label">Email</span><span>acceaa.gstu@example.com</span></div>
+        <div class="contact-line"><span class="label">Phone</span><span>+880 1XXX-XXXXXX</span></div>
+      </div>
+      <div class="form-wrap">
+        <div class="field"><label>Your name</label><input placeholder="Name"></div>
+        <div class="field"><label>Message</label><textarea rows="4" placeholder="How can we help?"></textarea></div>
+        <button class="btn btn-primary">Send Message</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer" id="mainFooter">
+  <div class="footer-inner">
+    <div class="footer-row">
+      <div class="footer-brand-compact">
+        <span class="brand-mark" style="width:26px;height:26px;font-size:11px;">A</span>
+        <span>ACCEAA, GSTU</span>
+      </div>
+      <nav class="footer-links">
+        <button onclick="switchTab('about')">About</button>
+        <button onclick="switchTab('committee')">Committee</button>
+        <button onclick="switchTab('members')">Membership</button>
+        <button onclick="switchTab('events')">Events</button>
+        <button onclick="switchTab('contact')">Contact</button>
+      </nav>
+      <div class="footer-social">
+        <a class="soc-btn soc-li" href="#" target="_blank" title="LinkedIn">in</a>
+        <a class="soc-btn soc-fb" href="#" target="_blank" title="Facebook">f</a>
+        <a class="soc-btn soc-em" href="mailto:acceaa.gstu@example.com" title="Email">@</a>
+        <a class="soc-btn soc-ph" href="tel:+8801XXXXXXXXX" title="Phone">☎</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 ACCEAA, GSTU · Dept. of ACCE, GSTU, Gopalganj · acceaa.gstu@example.com</span>
+      <span class="staff-link" onclick="switchTab('admin')">Staff Login</span>
+    </div>
+  </div>
+</footer>
+
+<header class="admin-topbar" id="adminHeader" style="display:none;">
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div><div class="brand-name">ACCEAA, GSTU</div><div class="brand-sub">Staff Panel</div></div>
+  </div>
+  <span class="back-to-site" onclick="switchTab('home')">← Back to website</span>
+</header>
+
+<section id="admin" style="max-width:1120px; margin:0 auto; padding:40px 32px 80px; min-height:calc(100vh - 64px);">
+  <div class="login-box" id="loginBox">
+    <h3>Staff Login</h3>
+    <p>Sign in with your username and password.</p>
+    <div class="field" style="text-align:left;"><label>Username</label><input id="loginUser" placeholder="e.g. admin"></div>
+    <div class="field" style="text-align:left;"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••"></div>
+    <div id="loginError" style="display:none; color:#B23A3A; font-size:12.5px; margin-bottom:14px; text-align:left;">Incorrect username or password.</div>
+    <button class="btn btn-primary" style="width:100%;" onclick="attemptLogin()">Log In</button>
+  </div>
+
+  <div class="admin-shell" id="adminShell">
+    <div class="admin-topline">
+      <div><h3 id="adminGreeting" style="font-size:18px;"></h3><span class="role-badge" id="adminRoleBadge"></span></div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>
+    </div>
+    <div class="admin-panels">
+      <button class="admin-panel-btn active" data-panel="events">Events & News</button>
+      <button class="admin-panel-btn" data-panel="members">Members & Directory</button>
+      <button class="admin-panel-btn" data-panel="achievements">Achievements</button>
+      <button class="admin-panel-btn" data-panel="committee">Executive Committee</button>
+      <button class="admin-panel-btn" data-panel="membership">Membership Form</button>
+      <button class="admin-panel-btn" data-panel="notices">Notices</button>
+      <button class="admin-panel-btn" data-panel="partners">Partners</button>
+      <button class="admin-panel-btn" data-panel="accounts">Account Settings</button>
+    </div>
+
+    <div id="panel-events">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Add a new event or news post — it appears on the public Events/News page and Home page immediately.</p>
+      <div class="admin-form-row">
+        <input id="evTitle" placeholder="Title">
+        <select id="evKind"><option value="event">Event</option><option value="news">News</option></select>
+      </div>
+      <div class="admin-form-row"><input id="evDate" type="date"><input id="evPhotoInput" type="file" accept="image/*"></div>
+      <textarea id="evDesc" placeholder="Description" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:5px;margin-bottom:14px;"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="publishEvent()">Publish</button>
+      <div id="adminEventList" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="panel-members" style="display:none;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Pending directory submissions from the public form.</p>
+      <div id="pendingList"></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:26px 0 14px; padding-top:18px; border-top:1px solid var(--line); flex-wrap:wrap; gap:10px;">
+        <h4 style="font-size:15px; margin:0;">All Members <span style="font-weight:400; color:var(--muted); font-size:12.5px;">(double-click a row to edit or delete)</span></h4>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="downloadMembersPDF()">Download PDF</button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadMembersExcel()">Download Excel</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="member-table" id="memberTable"></table>
+      </div>
+    </div>
+
+    <div id="panel-achievements" style="display:none;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Add a member's achievement — a new job, a promotion, or admission to higher studies. It will appear in "Recent Achievements" on the Home page and in the full Achievements history on the Events/News page.</p>
+      <div class="admin-form-row">
+        <input id="achName" placeholder="Alumni name">
+        <select id="achTag"><option value="Job">Job</option><option value="Higher Study">Higher Study</option><option value="Career">Career</option></select>
+      </div>
+      <div class="admin-form-row"><input id="achBatch" type="number" placeholder="Batch (year)"><input id="achPhotoInput" type="file" accept="image/*"></div>
+      <textarea id="achDesc" placeholder="Achievement details" rows="2" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:5px;margin-bottom:14px;"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="publishAchievement()">Publish Achievement</button>
+      <div id="adminAchievementList" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="panel-committee" style="display:none;">
+      <div class="locked-note" id="committeeLock">Committee editing is restricted to Admin accounts.</div>
+      <div id="committeeEditArea" style="display:none;">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Add or edit a committee member below — or archive the current term to start a new one (old committee stays visible under "Previous committees").</p>
+        <div id="committeeTermLabel" style="font-size:12px;color:var(--muted);margin-bottom:14px;"></div>
+        <div class="admin-form-row">
+          <input id="cmName" placeholder="Full name">
+          <input id="cmRole" placeholder="Role (e.g. President)">
+        </div>
+        <div class="admin-form-row">
+          <input id="cmBatch" type="number" placeholder="Batch (year)">
+          <input id="cmPhotoInput" type="file" accept="image/*">
+        </div>
+        <div class="admin-form-row">
+          <input id="cmLinkedin" placeholder="LinkedIn URL">
+          <input id="cmFacebook" placeholder="Facebook URL">
+        </div>
+        <div class="admin-form-row">
+          <input id="cmEmail" type="email" placeholder="Email">
+          <input id="cmPhone" placeholder="Phone">
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="saveCommitteeMember()">Save Committee Member</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearCommitteeForm()">Clear / New</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="archiveCommitteeTerm()">Archive current term &amp; start new</button>
+        </div>
+        <div id="adminCommitteeList"></div>
+      </div>
+    </div>
+
+    <div id="panel-accounts" style="display:none;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Update your own display name or password.</p>
+      <div class="admin-form-row">
+        <input id="myDisplayName" placeholder="Your display name">
+        <button class="btn btn-primary btn-sm" onclick="saveMyDisplayName()">Save Name</button>
+      </div>
+      <div class="admin-form-row">
+        <input id="myNewPassword" type="password" placeholder="New password (min 6 characters)">
+        <button class="btn btn-primary btn-sm" onclick="changeMyPassword()">Change My Password</button>
+      </div>
+      <div id="accountSaveMsg" style="display:none; color:var(--ok); font-size:12.5px; margin-top:6px;">Saved.</div>
+
+      <div class="locked-note" id="accountsLock" style="margin-top:24px;">Managing other staff accounts is restricted to Admin accounts.</div>
+      <div id="accountsEditArea" style="display:none; margin-top:24px;">
+        <h4 style="font-size:15px; margin-bottom:12px;">All Staff</h4>
+        <div id="staffList"></div>
+        <p style="font-size:13px;color:var(--muted); margin:20px 0 10px;">Reset another staff member's password:</p>
+        <div class="admin-form-row">
+          <select id="accountSelect"></select>
+          <input id="resetPasswordInput" type="password" placeholder="New password for selected staff">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="adminResetStaffPassword()">Reset Their Password</button>
+      </div>
+    </div>
+
+    <div id="panel-membership" style="display:none;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Upload the official membership form. Alumni will download this file from the Membership page.</p>
+      <div class="admin-form-row">
+        <input type="file" id="membershipFormInput" accept="application/pdf">
+        <button class="btn btn-primary btn-sm" onclick="uploadMembershipForm()">Upload PDF</button>
+      </div>
+      <div id="membershipFormStatus" style="font-size:12.5px; color:var(--muted);">No form uploaded yet — the public download button currently generates a basic placeholder form.</div>
+    </div>
+
+    <div id="panel-notices" style="display:none;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Add a notice (PDF) with a title and short description. It appears in the Notices section on the Membership page.</p>
+      <div class="admin-form-row">
+        <input id="noticeTitle" placeholder="Notice title">
+        <input type="file" id="noticeFileInput" accept="application/pdf">
+      </div>
+      <textarea id="noticeDesc" placeholder="Short description" rows="2" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:5px;margin-bottom:14px;"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="addNotice()">Publish Notice</button>
+      <div id="adminNoticeList" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="panel-partners" style="display:none;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Manage the partner logos shown in "Our Esteemed Partners" on the Home page.</p>
+      <div class="admin-form-row">
+        <input id="newPartnerName" placeholder="Partner name">
+        <button class="btn btn-primary btn-sm" onclick="addPartner()">Add Partner</button>
+      </div>
+      <div id="adminPartnerList" style="margin-top:14px;"></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="card-photo" id="modalAvatar" style="width:100%;height:80px;border-radius:8px;margin-bottom:14px;"></div>
+    <h3 id="modalName"></h3><div class="role" id="modalRole"></div>
+    <div class="modal-row"><span>Batch</span><span id="modalBatch"></span></div>
+    <div class="modal-row"><span>Degree</span><span id="modalDegree"></span></div>
+    <div class="modal-row"><span>Location</span><span id="modalLocation"></span></div>
+    <div class="modal-row"><span>Email</span><span id="modalEmail"></span></div>
+    <button class="btn btn-ghost modal-close" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="editModalBg">
+  <div class="modal" style="max-width:480px; text-align:left;">
+    <h3 style="margin-bottom:16px;">Edit Member</h3>
+    <div class="field-row two">
+      <div class="field"><label>Full Name</label><input id="editName"></div>
+      <div class="field"><label>Passing Year</label><input id="editBatch" type="number"></div>
+    </div>
+    <div class="field-row two">
+      <div class="field"><label>Programme</label><input id="editDegree"></div>
+      <div class="field"><label>Student ID</label><input id="editStudentId"></div>
+    </div>
+    <div class="field-row two">
+      <div class="field"><label>Organization</label><input id="editOrg"></div>
+      <div class="field"><label>Designation</label><input id="editDesignation"></div>
+    </div>
+    <div class="field-row two">
+      <div class="field"><label>Location</label><input id="editLocation"></div>
+      <div class="field"><label>Mobile Phone</label><input id="editMobile"></div>
+    </div>
+    <div class="field"><label>Email</label><input id="editEmail" type="email"></div>
+    <div style="display:flex; justify-content:space-between; margin-top:8px; gap:10px;">
+      <button class="btn btn-ghost" style="border-color:#B23A3A; color:#B23A3A;" onclick="deleteMember()">Delete Member</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveMemberEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// SUPABASE CLIENT
+// ============================================================================
+const SUPABASE_URL = 'https://qpqkjremiderjipqdbra.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_cCrLNV83MFH-Alqbh9AFoQ_66GFp79h';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Staff log in with a plain username (no email) — internally mapped to a
+// fake address on this fixed internal domain, since Supabase Auth needs
+// something email-shaped. Nobody ever sees or types this.
+const STAFF_EMAIL_DOMAIN = 'staff.acceaa-gstu.internal';
+function usernameToEmail(u){ return u.trim().toLowerCase() + '@' + STAFF_EMAIL_DOMAIN; }
+function emailToUsername(e){ return (e||'').split('@')[0]; }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,10); }
+
+async function uploadToStorage(bucket, folder, file){
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+  const path = `${folder}/${uid()}.${ext}`;
+  const { error } = await sb.storage.from(bucket).upload(path, file, { upsert:false });
+  if(error){ alert('Upload failed: ' + error.message); return null; }
+  const { data } = sb.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ============================================================================
+// STATE — live data loaded from Supabase (replaces the old hardcoded arrays)
+// ============================================================================
+let alumniPublic = [];     // public directory (safe fields only)
+let alumniStaff = [];      // members + private details, staff view only
+let execCommittee = [];
+let currentTermId = null;
+let currentTermLabel = '';
+let events = [];
+let achievementsFull = [];
+let achievements = [];
+let notices = [];
+let partners = [];
+let pending = [];
+let membershipFormUrl = null;
+let currentUser = null;    // { id, username, displayName, role }
+let staffList = [];
+let editingMemberId = null;
+let editingCommitteeId = null;
+
+function mapMember(m){
+  const role = m.designation ? (m.organization ? `${m.designation}, ${m.organization}` : m.designation) : (m.organization || '');
+  return { id:m.id, name:m.full_name, batch:m.passing_year, degree:m.programme, org:m.organization,
+    designation:m.designation, role, location:m.location, email:m.email, linkedin:m.linkedin,
+    facebook:m.facebook, photo:m.photo_url, membershipType:m.membership_type };
+}
+function mapMemberWithPrivate(m, p){
+  return { ...mapMember(m), studentId:p?.student_id||'', mobile:p?.mobile_phone||'', landPhone:p?.land_phone||'',
+    fatherName:p?.father_name||'', motherName:p?.mother_name||'', gender:p?.gender||'', dob:p?.date_of_birth||'',
+    bloodGroup:p?.blood_group||'', religion:p?.religion||'', nid:p?.nid||'', nationality:p?.nationality||'',
+    maritalStatus:p?.marital_status||'', mailingAddress:p?.mailing_address||'', permanentAddress:p?.permanent_address||'',
+    website:p?.website||'' };
+}
+
+async function loadPublicMembers(){
+  const { data, error } = await sb.from('members').select('*').order('passing_year', { ascending:false });
+  if(error){ console.error(error); return; }
+  alumniPublic = (data||[]).map(mapMember);
+}
+async function loadStaffMembers(){
+  const { data: members, error } = await sb.from('members').select('*').order('passing_year', { ascending:false });
+  if(error){ console.error(error); return; }
+  const { data: privates } = await sb.from('member_private_details').select('*');
+  const privMap = {}; (privates||[]).forEach(p=>privMap[p.member_id]=p);
+  alumniStaff = (members||[]).map(m=>mapMemberWithPrivate(m, privMap[m.id]));
+}
+async function loadCommittee(){
+  const { data: term } = await sb.from('committee_terms').select('*').eq('is_current', true).maybeSingle();
+  currentTermId = term?.id || null;
+  currentTermLabel = term?.label || '';
+  if(!currentTermId){ execCommittee = []; return; }
+  const { data } = await sb.from('committee').select('*').eq('term_id', currentTermId).order('sort_order');
+  execCommittee = (data||[]).map(c=>({ id:c.id, name:c.full_name, role:c.role, batch:c.batch,
+    linkedin:c.linkedin, facebook:c.facebook, email:c.email, phone:c.phone, photo:c.photo_url }));
+}
+async function loadAndRenderArchivedCommittees(){
+  const container = document.getElementById('archivedCommitteeList');
+  const { data: terms } = await sb.from('committee_terms').select('*').eq('is_current', false).order('created_at', { ascending:false });
+  if(!terms || !terms.length){
+    container.innerHTML = `<p style="font-size:12.5px; color:var(--muted); margin:10px 0;">No prior committees yet — this is the founding term. Once the first election is held, past committees will be archived here for reference.</p>`;
+    return;
+  }
+  let html = '';
+  for(const t of terms){
+    const { data: members } = await sb.from('committee').select('*').eq('term_id', t.id).order('sort_order');
+    const mapped = (members||[]).map(c=>({ name:c.full_name, role:c.role, batch:c.batch, linkedin:c.linkedin, facebook:c.facebook, email:c.email, phone:c.phone }));
+    html += `<div style="margin:18px 0 8px; font-weight:600; font-size:13.5px; color:var(--ink-2);">${t.label}</div>
+      <div class="exec-grid">${mapped.map(execCardHTML).join('')}</div>`;
+  }
+  container.innerHTML = html;
+}
+async function loadEvents(){
+  const { data } = await sb.from('events').select('*').order('event_date', { ascending:false });
+  events = (data||[]).map(e=>{
+    const d = new Date(e.event_date + 'T00:00:00');
+    return { id:e.id, kind:e.kind, title:e.title, desc:e.description||'', date:e.event_date, photo:e.photo_url,
+      day:String(d.getDate()).padStart(2,'0'), mon:d.toLocaleString('en',{month:'short'}).toUpperCase() };
+  });
+}
+async function loadAchievements(){
+  const { data } = await sb.from('achievements').select('*').order('created_at', { ascending:false });
+  achievementsFull = (data||[]).map(a=>({ id:a.id, name:a.alumni_name, batch:a.batch, tag:a.tag, text:a.description, photo:a.photo_url }));
+  achievements = achievementsFull.slice(0,3);
+}
+async function loadNotices(){
+  const { data } = await sb.from('notices').select('*').order('created_at', { ascending:false });
+  notices = (data||[]).map(n=>({ id:n.id, title:n.title, desc:n.description||'', fileUrl:n.file_url }));
+}
+async function loadPartners(){
+  const { data } = await sb.from('partners').select('*').order('sort_order');
+  partners = (data||[]).map(p=>({ id:p.id, name:p.name }));
+}
+async function loadMembershipForm(){
+  const { data } = await sb.from('membership_form').select('*').eq('id',1).maybeSingle();
+  membershipFormUrl = data?.file_url || null;
+}
+async function loadPending(){
+  const { data } = await sb.from('pending_submissions').select('*').order('submitted_at', { ascending:false });
+  pending = (data||[]).map(p=>({ id:p.id, name:p.full_name, batch:p.passing_year,
+    note: p.note || (p.submission_type==='update' ? 'Update submitted' : 'New submission') }));
+}
+
+async function loadPublicData(){
+  await Promise.all([
+    loadPublicMembers(), loadCommittee(), loadEvents(), loadAchievements(),
+    loadNotices(), loadPartners(), loadMembershipForm()
+  ]);
+  renderLedgerFilters(); renderGrid(); renderExec(); renderEvents('all'); renderHomeNews();
+  renderAchievements(); renderPartners(); renderNotices();
+  loadAndRenderArchivedCommittees();
+}
+
+const faqs = [
+  {q:"Who can become a member of ACCEAA, GSTU?", a:"Any person who has completed graduation from the Department of Applied Chemistry and Chemical Engineering, GSTU, is eligible to become a General Member."},
+  {q:"How much does membership cost?", a:"General Membership is a one-time fee of ৳250. Life Membership is ৳2,500, renewable every five years at a rate set closer to the renewal date."},
+  {q:"How do I update my information in the directory?", a:"Use the \"Submit / Update Your Info\" form. The department office reviews every submission before it appears publicly."},
+  {q:"How can I get involved in events?", a:"Watch the Events & News page for upcoming reunions, seminars, and workshops, or reach out to the Organizing Secretary directly."},
+  {q:"Who governs the Association?", a:"The General Assembly, made up of all General and Life Members, is the supreme decision-making body. The Executive Committee manages day-to-day operations and is elected every two years."}
+];
+
+function switchTab(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
+  document.getElementById('navTabs').classList.remove('open');
+
+  const isAdminPage = id === 'admin';
+  document.querySelector('main').style.display = isAdminPage ? 'none' : 'block';
+  document.getElementById('mainHeader').style.display = isAdminPage ? 'none' : 'flex';
+  document.getElementById('mainFooter').style.display = isAdminPage ? 'none' : 'block';
+  document.getElementById('adminHeader').style.display = isAdminPage ? 'flex' : 'none';
+
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+document.getElementById('hamburgerBtn').addEventListener('click', ()=>document.getElementById('navTabs').classList.toggle('open'));
+
+function goToAchievementsHistory(){
+  switchTab('events');
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+  document.querySelector('.chip[data-kind="achievement"]').classList.add('active');
+  renderEvents('achievement');
+}
+
+function initials(name){return name.split(' ').map(n=>n[0]).join('').slice(0,2);}
+
+function renderLedgerFilters(){
+  const batchFilter = document.getElementById('batchFilter');
+  const degreeFilter = document.getElementById('degreeFilter');
+  batchFilter.querySelectorAll('option:not(:first-child)').forEach(o=>o.remove());
+  degreeFilter.querySelectorAll('option:not(:first-child)').forEach(o=>o.remove());
+  const batches = [...new Set(alumniPublic.map(a=>a.batch).filter(Boolean))].sort((a,b)=>a-b);
+  batches.forEach(y=>batchFilter.insertAdjacentHTML('beforeend', `<option value="${y}">${y}</option>`));
+  const degrees = [...new Set(alumniPublic.map(a=>a.degree).filter(Boolean))];
+  degrees.forEach(d=>degreeFilter.insertAdjacentHTML('beforeend', `<option value="${d}">${d}</option>`));
+}
+
+function renderGrid(){
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  const batch = document.getElementById('batchFilter').value;
+  const degree = document.getElementById('degreeFilter').value;
+  const filtered = alumniPublic.filter(a=> (!batch||a.batch==batch) && (!degree||a.degree===degree) &&
+    (!q || a.name.toLowerCase().includes(q) || (a.role||'').toLowerCase().includes(q) || (a.location||'').toLowerCase().includes(q)));
+  const grid = document.getElementById('cardGrid');
+  grid.innerHTML = filtered.map(a=>`
+    <div class="card" onclick="openModal('${a.id}')">
+      <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':initials(a.name)}</div>
+      <div class="card-body"><h3>${a.name}</h3><div class="role">${a.role||''}</div>
+      <div class="tags"><span class="tag">${a.batch||''}</span><span class="tag">${a.degree||''}</span><span class="tag">${(a.location||'').split(', ')[1]||a.location||''}</span></div></div>
+    </div>`).join('') || `<div style="padding:40px;text-align:center;color:var(--muted);">No matches yet.</div>`;
+}
+['searchBox','batchFilter','degreeFilter'].forEach(id=>document.getElementById(id).addEventListener('input',renderGrid));
+
+function openModal(id){
+  const a = alumniPublic.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('modalAvatar').textContent = initials(a.name);
+  document.getElementById('modalName').textContent = a.name;
+  document.getElementById('modalRole').textContent = a.role||'';
+  document.getElementById('modalBatch').textContent = a.batch||'';
+  document.getElementById('modalDegree').textContent = a.degree||'';
+  document.getElementById('modalLocation').textContent = a.location||'';
+  document.getElementById('modalEmail').textContent = a.email||'';
+  document.getElementById('modalBg').style.display = 'flex';
+}
+function closeModal(){document.getElementById('modalBg').style.display='none';}
+document.getElementById('modalBg').addEventListener('click', e=>{if(e.target.id==='modalBg') closeModal();});
+
+function execCardHTML(e){
+  const profileUrl = e.linkedin || e.facebook || '#';
+  return `
+    <div class="exec-card">
+      <div class="exec-photo">${initials(e.name)}</div>
+      <div class="exec-info">
+        <h3>${e.name}</h3>
+        <div class="exec-role">${e.role}</div>
+        <div class="exec-batch">Batch ${e.batch}</div>
+        <div class="exec-social">
+          ${e.linkedin ? `<a class="soc-btn soc-li" href="${e.linkedin}" target="_blank" title="LinkedIn">in</a>` : ''}
+          ${e.facebook ? `<a class="soc-btn soc-fb" href="${e.facebook}" target="_blank" title="Facebook">f</a>` : ''}
+          <a class="soc-btn soc-em" href="mailto:${e.email}" title="Email">@</a>
+          <a class="soc-btn soc-ph" href="tel:${e.phone}" title="Phone">☎</a>
+        </div>
+        <button class="view-profile" onclick="window.open('${profileUrl}','_blank')">View Profile</button>
+      </div>
+    </div>`;
+}
+function renderExec(){
+  document.getElementById('execGrid').innerHTML = execCommittee.map(execCardHTML).join('');
+  document.getElementById('execGridHome').innerHTML = execCommittee.slice(0,4).map(execCardHTML).join('');
+}
+
+function eventCardHTML(e){
+  return `
+    <div class="event-card">
+      <div class="event-photo"><div class="event-date-badge"><div class="d">${e.day}</div><div class="m">${e.mon}</div></div>photo placeholder</div>
+      <div class="event-body"><h3>${e.title}<span class="kind-tag">${e.kind}</span></h3><p>${e.desc}</p></div>
+    </div>`;
+}
+function renderEvents(kindFilter){
+  if(kindFilter==='achievement'){
+    document.getElementById('eventList').className = 'ach-grid';
+    document.getElementById('eventList').innerHTML = achievementsFull.map(achCardHTML).join('');
+    return;
+  }
+  document.getElementById('eventList').className = 'event-grid';
+  if(kindFilter==='all'){
+    document.getElementById('eventList').innerHTML =
+      events.map(eventCardHTML).join('') + achievementsFull.map(achCardHTML).join('');
+    return;
+  }
+  const filtered = events.filter(e=>e.kind===kindFilter);
+  document.getElementById('eventList').innerHTML = filtered.map(eventCardHTML).join('');
+}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click', ()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); c.classList.add('active');
+  renderEvents(c.dataset.kind);
+}));
+
+function renderHomeNews(){
+  document.getElementById('homeNewsStrip').innerHTML = events.slice(0,3).map(e=>`
+    <div class="news-card"><div class="news-photo"${e.photo?` style="background-image:url('${e.photo}');background-size:cover;background-position:center;"`:''}>${e.photo?'':'photo placeholder'}</div>
+    <div class="news-body"><span class="news-tag">${e.kind}</span><h3>${e.title}</h3><p>${e.desc.slice(0,80)}…</p></div></div>`).join('');
+}
+
+async function publishEvent(){
+  const title = document.getElementById('evTitle').value.trim();
+  const kind = document.getElementById('evKind').value;
+  const date = document.getElementById('evDate').value;
+  const desc = document.getElementById('evDesc').value.trim();
+  const file = document.getElementById('evPhotoInput').files[0];
+  if(!title || !date){ alert('Title and date are required.'); return; }
+  let photo_url = null;
+  if(file){ photo_url = await uploadToStorage('photos', 'events', file); if(photo_url===null && file) return; }
+  const { error } = await sb.from('events').insert({ title, kind, event_date:date, description:desc, photo_url });
+  if(error){ alert('Could not publish: ' + error.message); return; }
+  document.getElementById('evTitle').value=''; document.getElementById('evDate').value='';
+  document.getElementById('evDesc').value=''; document.getElementById('evPhotoInput').value='';
+  await loadEvents(); renderEvents('all'); renderHomeNews(); renderAdminEventList();
+}
+async function deleteEvent(id){
+  if(!confirm('Delete this event/news post?')) return;
+  await sb.from('events').delete().eq('id', id);
+  await loadEvents(); renderEvents('all'); renderHomeNews(); renderAdminEventList();
+}
+function renderAdminEventList(){
+  const el = document.getElementById('adminEventList');
+  if(!events.length){ el.innerHTML = `<div class="notice-empty">No events or news yet.</div>`; return; }
+  el.innerHTML = events.map(e=>`
+    <div class="pend-row"><div style="font-size:13px;"><strong>${e.title}</strong><div class="pend-meta">${e.kind} · ${e.date}</div></div>
+      <button class="approve-btn" style="background:#B23A3A;" onclick="deleteEvent('${e.id}')">Delete</button></div>`).join('');
+}
+
+function achCardHTML(a){
+  const photoStyle = a.photo ? ` style="background-image:url('${a.photo}')"` : '';
+  const defaultMark = a.photo ? '' : `<div class="ach-default-logo">A</div>`;
+  return `
+    <div class="ach-card">
+      <div class="ach-photo"${photoStyle}><span class="ach-tag-badge">${a.tag}</span>${defaultMark}</div>
+      <div class="ach-body"><h3>${a.name} · Batch ${a.batch}</h3><p>${a.text}</p></div>
+    </div>`;
+}
+function renderAchievements(){
+  document.getElementById('achGrid').innerHTML = achievements.map(achCardHTML).join('');
+}
+
+async function publishAchievement(){
+  const name = document.getElementById('achName').value.trim();
+  const tag = document.getElementById('achTag').value;
+  const batch = parseInt(document.getElementById('achBatch').value) || null;
+  const desc = document.getElementById('achDesc').value.trim();
+  const file = document.getElementById('achPhotoInput').files[0];
+  if(!name || !desc){ alert('Alumni name and achievement details are required.'); return; }
+  let photo_url = null;
+  if(file){ photo_url = await uploadToStorage('photos', 'achievements', file); if(photo_url===null && file) return; }
+  const { error } = await sb.from('achievements').insert({ alumni_name:name, tag, batch, description:desc, photo_url });
+  if(error){ alert('Could not publish: ' + error.message); return; }
+  document.getElementById('achName').value=''; document.getElementById('achBatch').value='';
+  document.getElementById('achDesc').value=''; document.getElementById('achPhotoInput').value='';
+  await loadAchievements(); renderAchievements(); renderEvents('all'); renderAdminAchievementList();
+}
+async function deleteAchievement(id){
+  if(!confirm('Delete this achievement?')) return;
+  await sb.from('achievements').delete().eq('id', id);
+  await loadAchievements(); renderAchievements(); renderEvents('all'); renderAdminAchievementList();
+}
+function renderAdminAchievementList(){
+  const el = document.getElementById('adminAchievementList');
+  if(!achievementsFull.length){ el.innerHTML = `<div class="notice-empty">No achievements yet.</div>`; return; }
+  el.innerHTML = achievementsFull.map(a=>`
+    <div class="pend-row"><div style="font-size:13px;"><strong>${a.name}</strong><div class="pend-meta">${a.tag} · Batch ${a.batch||'—'}</div></div>
+      <button class="approve-btn" style="background:#B23A3A;" onclick="deleteAchievement('${a.id}')">Delete</button></div>`).join('');
+}
+
+function renderFaq(){
+  document.getElementById('faqList').innerHTML = faqs.map(f=>`
+    <details class="faq-item"><summary>${f.q}</summary><p>${f.a}</p></details>`).join('');
+}
+
+function renderPartners(){
+  document.getElementById('partnerRow').innerHTML = partners.map(p=>`
+    <div class="partner-tile"><div class="pt-mark">${p.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>${p.name}</div>`).join('');
+}
+function renderAdminPartnerList(){
+  document.getElementById('adminPartnerList').innerHTML = partners.map(p=>`
+    <div class="pend-row"><div style="font-size:13.5px;">${p.name}</div>
+      <button class="approve-btn" style="background:#B23A3A;" onclick="removePartner('${p.id}')">Remove</button></div>`).join('')
+    || `<div class="notice-empty">No partners added yet.</div>`;
+}
+async function addPartner(){
+  const val = document.getElementById('newPartnerName').value.trim();
+  if(!val) return;
+  const { error } = await sb.from('partners').insert({ name:val, sort_order:partners.length });
+  if(error){ alert('Could not add: ' + error.message); return; }
+  document.getElementById('newPartnerName').value = '';
+  await loadPartners(); renderPartners(); renderAdminPartnerList();
+}
+async function removePartner(id){
+  await sb.from('partners').delete().eq('id', id);
+  await loadPartners(); renderPartners(); renderAdminPartnerList();
+}
+
+function renderNotices(){
+  const el = document.getElementById('noticeList');
+  if(!notices.length){ el.innerHTML = `<div class="notice-empty">No notices published yet.</div>`; return; }
+  el.innerHTML = notices.map(n=>`
+    <div class="notice-card">
+      <div class="notice-icon">📄</div>
+      <div class="notice-body"><h4>${n.title}</h4><p>${n.desc}</p></div>
+      ${n.fileUrl ? `<a class="btn btn-ghost btn-sm" href="${n.fileUrl}" target="_blank">Download PDF</a>` : `<span style="font-size:11.5px;color:var(--muted);">PDF pending upload</span>`}
+    </div>`).join('');
+}
+function renderAdminNoticeList(){
+  const el = document.getElementById('adminNoticeList');
+  if(!notices.length){ el.innerHTML = `<div class="notice-empty">No notices yet.</div>`; return; }
+  el.innerHTML = notices.map(n=>`
+    <div class="pend-row"><div style="font-size:13px;"><strong>${n.title}</strong><div class="pend-meta">${n.desc}</div></div>
+      <button class="approve-btn" style="background:#B23A3A;" onclick="deleteNotice('${n.id}')">Delete</button></div>`).join('');
+}
+async function addNotice(){
+  const title = document.getElementById('noticeTitle').value.trim();
+  const desc = document.getElementById('noticeDesc').value.trim();
+  const file = document.getElementById('noticeFileInput').files[0];
+  if(!title) return;
+  let file_url = null;
+  if(file){ file_url = await uploadToStorage('documents', 'notices', file); if(file_url===null && file) return; }
+  const { error } = await sb.from('notices').insert({ title, description:desc, file_url });
+  if(error){ alert('Could not publish: ' + error.message); return; }
+  document.getElementById('noticeTitle').value = '';
+  document.getElementById('noticeDesc').value = '';
+  document.getElementById('noticeFileInput').value = '';
+  await loadNotices(); renderNotices(); renderAdminNoticeList();
+}
+async function deleteNotice(id){
+  if(!confirm('Delete this notice?')) return;
+  await sb.from('notices').delete().eq('id', id);
+  await loadNotices(); renderNotices(); renderAdminNoticeList();
+}
+
+async function uploadMembershipForm(){
+  const file = document.getElementById('membershipFormInput').files[0];
+  if(!file) return;
+  const url = await uploadToStorage('documents', 'membership-form', file);
+  if(!url) return;
+  const { error } = await sb.from('membership_form').update({ file_url:url, uploaded_at:new Date().toISOString() }).eq('id',1);
+  if(error){ alert('Could not save: ' + error.message); return; }
+  membershipFormUrl = url;
+  document.getElementById('membershipFormInput').value = '';
+  document.getElementById('membershipFormStatus').textContent = `Uploaded: ${file.name} — alumni will now download this exact file.`;
+}
+function downloadMembershipForm(){
+  if(membershipFormUrl){
+    const a = document.createElement('a');
+    a.href = membershipFormUrl; a.download = "ACCEAA_GSTU_Membership_Form.pdf";
+    a.click();
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFont("helvetica","bold"); doc.setFontSize(15);
+  doc.text("ACCEAA, GSTU — Membership Form", 14, 18);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10);
+  const fields = ["Full Name:", "Father's Name:", "Mother's Name:", "Date of Birth:", "Batch / Passing Year:",
+    "Programme:", "Student ID:", "Mailing Address:", "Permanent Address:", "Email:", "Mobile Phone:",
+    "Membership Type (General / Life / Honorary):", "Signature:", "Date:"];
+  let y = 32;
+  fields.forEach(f=>{
+    doc.text(f, 14, y);
+    doc.line(70, y+1, 196, y+1);
+    y += 14;
+  });
+  doc.save("ACCEAA_GSTU_Membership_Form.pdf");
+}
+
+function renderObjectives(){
+  const objectives = [
+    "Create and maintain lasting bonds of friendship and cooperation among alumni, current students, and faculty of the Department.",
+    "Encourage professional networking, mentorship, and career support among members.",
+    "Support the academic and infrastructural development of the Department through cooperation, resource mobilization, and consultation with University authorities.",
+    "Support current students through scholarships, career counselling, internships, and job opportunities.",
+    "Strengthen fraternity among members by organizing reunions, seminars, workshops, and social/cultural events.",
+    "Recognize and celebrate the achievements of alumni and maintain a public record of their contributions.",
+  ];
+  document.getElementById('objList').innerHTML = objectives.map((o,i)=>`
+    <div class="obj-item"><div class="obj-num">${String(i+1).padStart(2,'0')}</div><p>${o}</p></div>`).join('');
+}
+
+const feeMini = [
+  {name:"General", price:"৳250", note:"one-time"},
+  {name:"Life", price:"৳2,500", note:"renews every 5 yrs"},
+  {name:"Honorary", price:"—", note:"by invitation"},
+];
+function renderFeeHome(){
+  document.getElementById('feeGridHome').innerHTML = feeMini.map((f,i)=>`
+    <div class="fee-card ${i===1?'featured':''}"><h3>${f.name} Membership</h3><div class="fee-price">${f.price} <span>${f.note}</span></div></div>`).join('');
+}
+
+document.getElementById('photoInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    document.getElementById('photoPreview').style.backgroundImage = `url(${ev.target.result})`;
+    document.getElementById('photoPlaceholderIcon').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('alumniForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const submitBtn = this.querySelector('button[type="submit"]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
+
+  const file = document.getElementById('photoInput').files[0];
+  let photo_url = null;
+  if(file){ photo_url = await uploadToStorage('photos', 'members', file); }
+
+  const payload = {
+    submission_type: 'new',
+    full_name: document.getElementById('fFullName').value.trim(),
+    father_name: document.getElementById('fFatherName').value.trim(),
+    mother_name: document.getElementById('fMotherName').value.trim(),
+    gender: document.getElementById('fGender').value,
+    date_of_birth: document.getElementById('fDob').value || null,
+    blood_group: document.getElementById('fBloodGroup').value,
+    religion: document.getElementById('fReligion').value.trim(),
+    nid: document.getElementById('fNid').value.trim(),
+    nationality: document.getElementById('fNationality').value.trim(),
+    marital_status: document.getElementById('fMaritalStatus').value,
+    mailing_address: document.getElementById('fMailingAddress').value.trim(),
+    permanent_address: document.getElementById('fPermanentAddress').value.trim(),
+    email: document.getElementById('fEmail').value.trim(),
+    land_phone: document.getElementById('fLandPhone').value.trim(),
+    mobile_phone: document.getElementById('fMobilePhone').value.trim(),
+    website: document.getElementById('fWebsite').value.trim(),
+    linkedin: document.getElementById('fLinkedin').value.trim(),
+    facebook: document.getElementById('fFacebook').value.trim(),
+    programme: document.getElementById('fProgramme').value,
+    student_id: document.getElementById('fStudentId').value.trim(),
+    passing_year: parseInt(document.getElementById('fPassingYear').value) || null,
+    organization: document.getElementById('fOrganization').value.trim(),
+    designation: document.getElementById('fDesignation').value.trim(),
+    photo_url
+  };
+
+  const { error } = await sb.from('pending_submissions').insert(payload);
+  submitBtn.disabled = false; submitBtn.textContent = 'Submit for Review';
+  if(error){ alert('Something went wrong submitting your info: ' + error.message); return; }
+
+  this.reset();
+  document.getElementById('photoPreview').style.backgroundImage = 'none';
+  document.getElementById('photoPlaceholderIcon').style.display = 'inline';
+  document.getElementById('successBox').style.display = 'block';
+});
+
+function renderPending(){
+  const el = document.getElementById('pendingList');
+  if(!pending.length){ el.innerHTML = `<div class="notice-empty">No pending submissions.</div>`; return; }
+  el.innerHTML = pending.map(p=>`
+    <div class="pend-row"><div class="pend-info"><div class="ach-photo" style="width:34px;height:34px;font-size:12px;">${initials(p.name)}</div>
+      <div><div style="font-weight:600;font-size:13.5px;">${p.name}</div><div class="pend-meta">Batch ${p.batch||'—'} · ${p.note}</div></div></div>
+      <div style="display:flex; gap:6px;">
+        <button class="approve-btn" onclick="approvePending('${p.id}', this)">Approve</button>
+        <button class="approve-btn" style="background:#B23A3A;" onclick="rejectPending('${p.id}', this)">Reject</button>
+      </div></div>`).join('');
+}
+async function approvePending(id, btnEl){
+  const { error } = await sb.rpc('approve_pending_submission', { submission_id:id });
+  if(error){ alert('Could not approve: ' + error.message); return; }
+  btnEl.closest('.pend-row').style.opacity = 0.4; btnEl.textContent = 'Approved'; btnEl.disabled = true;
+  await Promise.all([loadPending(), loadStaffMembers(), loadPublicMembers()]);
+  renderMemberTable(); renderGrid(); renderLedgerFilters();
+}
+async function rejectPending(id, btnEl){
+  if(!confirm('Discard this submission? This cannot be undone.')) return;
+  await sb.from('pending_submissions').delete().eq('id', id);
+  btnEl.closest('.pend-row').remove();
+  await loadPending();
+}
+
+function renderMemberTable(){
+  const rows = alumniStaff.map(a=>`
+    <tr ondblclick="openEditModal('${a.id}')">
+      <td>${a.name}</td><td>${a.batch||''}</td><td>${a.degree||''}</td><td>${a.org||'—'}</td><td>${a.designation||'—'}</td><td>${a.email||''}</td>
+    </tr>`).join('');
+  document.getElementById('memberTable').innerHTML = `
+    <thead><tr><th>Name</th><th>Batch</th><th>Programme</th><th>Organization</th><th>Designation</th><th>Email</th></tr></thead>
+    <tbody>${rows}</tbody>`;
+}
+
+function openEditModal(id){
+  editingMemberId = id;
+  const a = alumniStaff.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('editName').value = a.name;
+  document.getElementById('editBatch').value = a.batch||'';
+  document.getElementById('editDegree').value = a.degree||'';
+  document.getElementById('editStudentId').value = a.studentId || '';
+  document.getElementById('editOrg').value = a.org || '';
+  document.getElementById('editDesignation').value = a.designation || '';
+  document.getElementById('editLocation').value = a.location||'';
+  document.getElementById('editMobile').value = a.mobile || '';
+  document.getElementById('editEmail').value = a.email||'';
+  document.getElementById('editModalBg').style.display = 'flex';
+}
+function closeEditModal(){
+  document.getElementById('editModalBg').style.display = 'none';
+  editingMemberId = null;
+}
+document.getElementById('editModalBg').addEventListener('click', e=>{if(e.target.id==='editModalBg') closeEditModal();});
+
+async function saveMemberEdit(){
+  if(!editingMemberId) return;
+  const name = document.getElementById('editName').value;
+  const batch = parseInt(document.getElementById('editBatch').value) || null;
+  const degree = document.getElementById('editDegree').value;
+  const studentId = document.getElementById('editStudentId').value;
+  const org = document.getElementById('editOrg').value;
+  const designation = document.getElementById('editDesignation').value;
+  const location = document.getElementById('editLocation').value;
+  const mobile = document.getElementById('editMobile').value;
+  const email = document.getElementById('editEmail').value;
+
+  const { error:e1 } = await sb.from('members').update({
+    full_name:name, passing_year:batch, programme:degree, organization:org, designation, location, email
+  }).eq('id', editingMemberId);
+  const { error:e2 } = await sb.from('member_private_details').upsert({
+    member_id:editingMemberId, student_id:studentId, mobile_phone:mobile
+  });
+  if(e1 || e2){ alert('Could not save: ' + (e1?.message || e2?.message)); return; }
+
+  closeEditModal();
+  await Promise.all([loadStaffMembers(), loadPublicMembers()]);
+  renderMemberTable(); renderGrid(); renderLedgerFilters();
+}
+async function deleteMember(){
+  if(!editingMemberId) return;
+  if(!confirm('Remove this member from the directory? This cannot be undone.')) return;
+  await sb.from('members').delete().eq('id', editingMemberId);
+  closeEditModal();
+  await Promise.all([loadStaffMembers(), loadPublicMembers()]);
+  renderMemberTable(); renderGrid(); renderLedgerFilters();
+}
+
+function downloadMembersExcel(){
+  const rows = alumniStaff.map(a=>({
+    Name:a.name, Batch:a.batch, Programme:a.degree, "Student ID":a.studentId||'', Organization:a.org||'',
+    Designation:a.designation||'', Location:a.location, Email:a.email, Mobile:a.mobile||'',
+    LinkedIn:a.linkedin||'', Facebook:a.facebook||''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Members");
+  XLSX.writeFile(wb, "ACCEAA_GSTU_Members.xlsx");
+}
+
+function downloadMembersPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFont("helvetica", "bold"); doc.setFontSize(14);
+  doc.text("ACCEAA, GSTU — Member Directory", 14, 16);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(90,100,114);
+  doc.text(`Generated: ${new Date().toLocaleDateString()} · Total members: ${alumniStaff.length}`, 14, 22);
+  doc.setTextColor(20,33,61);
+  let y = 32;
+  alumniStaff.forEach((a,i)=>{
+    if(y > 280){ doc.addPage(); y = 16; }
+    doc.setFont("helvetica","bold"); doc.text(`${i+1}. ${a.name}`, 14, y);
+    doc.setFont("helvetica","normal");
+    doc.text(`Batch ${a.batch||'—'} · ${a.degree||''} · ${a.designation||'—'} at ${a.org||'—'}`, 14, y+5);
+    doc.text(`${a.email||''}${a.mobile ? '  ·  ' + a.mobile : ''}  ·  ${a.location||''}`, 14, y+10);
+    y += 18;
+  });
+  doc.save("ACCEAA_GSTU_Members.pdf");
+}
+
+// ============================================================================
+// COMMITTEE (Admin only)
+// ============================================================================
+function clearCommitteeForm(){
+  editingCommitteeId = null;
+  ['cmName','cmRole','cmBatch','cmLinkedin','cmFacebook','cmEmail','cmPhone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cmPhotoInput').value='';
+}
+function editCommitteeMember(id){
+  const c = execCommittee.find(x=>x.id===id);
+  if(!c) return;
+  editingCommitteeId = id;
+  document.getElementById('cmName').value = c.name;
+  document.getElementById('cmRole').value = c.role;
+  document.getElementById('cmBatch').value = c.batch||'';
+  document.getElementById('cmLinkedin').value = c.linkedin||'';
+  document.getElementById('cmFacebook').value = c.facebook||'';
+  document.getElementById('cmEmail').value = c.email||'';
+  document.getElementById('cmPhone').value = c.phone||'';
+}
+async function ensureCurrentTerm(){
+  if(currentTermId) return currentTermId;
+  const label = prompt('No current committee term exists yet. Enter a label for it (e.g. "Founding term · 2024–2026"):');
+  if(!label) return null;
+  const { data, error } = await sb.from('committee_terms').insert({ label, is_current:true }).select().single();
+  if(error){ alert('Could not create term: ' + error.message); return null; }
+  currentTermId = data.id; currentTermLabel = data.label;
+  document.getElementById('committeeTermLabel').textContent = `Editing: ${currentTermLabel}`;
+  return currentTermId;
+}
+async function saveCommitteeMember(){
+  const term_id = await ensureCurrentTerm();
+  if(!term_id) return;
+  const name = document.getElementById('cmName').value.trim();
+  const role = document.getElementById('cmRole').value.trim();
+  if(!name || !role){ alert('Name and role are required.'); return; }
+  const batch = parseInt(document.getElementById('cmBatch').value) || null;
+  const linkedin = document.getElementById('cmLinkedin').value.trim();
+  const facebook = document.getElementById('cmFacebook').value.trim();
+  const email = document.getElementById('cmEmail').value.trim();
+  const phone = document.getElementById('cmPhone').value.trim();
+  const file = document.getElementById('cmPhotoInput').files[0];
+  let photo_url;
+  if(file){ photo_url = await uploadToStorage('photos', 'committee', file); }
+
+  const payload = { term_id, full_name:name, role, batch, linkedin, facebook, email, phone };
+  if(photo_url) payload.photo_url = photo_url;
+
+  let error;
+  if(editingCommitteeId){ ({ error } = await sb.from('committee').update(payload).eq('id', editingCommitteeId)); }
+  else { ({ error } = await sb.from('committee').insert(payload)); }
+  if(error){ alert('Could not save: ' + error.message); return; }
+  clearCommitteeForm();
+  await loadCommittee(); renderExec(); renderAdminCommitteeList();
+}
+async function deleteCommitteeMember(id){
+  if(!confirm('Remove this committee member?')) return;
+  await sb.from('committee').delete().eq('id', id);
+  await loadCommittee(); renderExec(); renderAdminCommitteeList();
+}
+async function archiveCommitteeTerm(){
+  if(!currentTermId){ alert('No current term to archive.'); return; }
+  const label = prompt('Enter a label for the NEW committee term (e.g. "2026–2028"):');
+  if(!label) return;
+  if(!confirm('This archives the current committee under "Previous committees" and starts a fresh, empty term. Continue?')) return;
+  await sb.from('committee_terms').update({ is_current:false }).eq('id', currentTermId);
+  const { data, error } = await sb.from('committee_terms').insert({ label, is_current:true }).select().single();
+  if(error){ alert('Could not create new term: ' + error.message); return; }
+  currentTermId = data.id; currentTermLabel = data.label;
+  clearCommitteeForm();
+  await loadCommittee(); renderExec(); renderAdminCommitteeList(); loadAndRenderArchivedCommittees();
+}
+function renderAdminCommitteeList(){
+  const el = document.getElementById('adminCommitteeList');
+  document.getElementById('committeeTermLabel').textContent = currentTermLabel ? `Editing: ${currentTermLabel}` : 'No current term yet — save a member to start one.';
+  if(!execCommittee.length){ el.innerHTML = `<div class="notice-empty">No committee members in the current term yet.</div>`; return; }
+  el.innerHTML = execCommittee.map(c=>`
+    <div class="pend-row"><div style="font-size:13px;"><strong>${c.name}</strong><div class="pend-meta">${c.role} · Batch ${c.batch||'—'}</div></div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="editCommitteeMember('${c.id}')">Edit</button>
+        <button class="approve-btn" style="background:#B23A3A;" onclick="deleteCommitteeMember('${c.id}')">Delete</button>
+      </div></div>`).join('');
+}
+
+// ============================================================================
+// AUTH / SESSION
+// ============================================================================
+async function attemptLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  document.getElementById('loginError').style.display = 'none';
+  if(!u || !p) return;
+  const { data, error } = await sb.auth.signInWithPassword({ email: usernameToEmail(u), password:p });
+  if(error || !data?.user){
+    document.getElementById('loginError').textContent = 'Incorrect username or password.';
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+  await enterAdminSession();
+}
+async function enterAdminSession(){
+  const { data:{ user } } = await sb.auth.getUser();
+  if(!user) return;
+  const { data:profile, error } = await sb.from('staff_profiles').select('*').eq('id', user.id).single();
+  if(error || !profile){
+    document.getElementById('loginError').textContent = 'Login worked, but no staff profile exists for this account.';
+    document.getElementById('loginError').style.display = 'block';
+    await sb.auth.signOut();
+    return;
+  }
+  currentUser = { id:user.id, username:emailToUsername(user.email), displayName:profile.display_name, role:profile.role };
+  await loginAsUI();
+}
+async function loginAsUI(){
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('adminShell').classList.add('active');
+  document.getElementById('adminGreeting').textContent = `Welcome, ${currentUser.displayName}`;
+  const isAdmin = currentUser.role === 'admin';
+  document.getElementById('adminRoleBadge').textContent = isAdmin ? 'Full Access' : 'Moderator — Events, News & Members';
+  document.getElementById('committeeLock').style.display = isAdmin ? 'none' : 'block';
+  document.getElementById('committeeEditArea').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('accountsLock').style.display = isAdmin ? 'none' : 'block';
+  document.getElementById('accountsEditArea').style.display = isAdmin ? 'block' : 'none';
+  document.querySelector('.admin-panel-btn[data-panel="committee"]').style.opacity = isAdmin ? '1' : '.55';
+  document.querySelector('.admin-panel-btn[data-panel="accounts"]').style.opacity = isAdmin ? '1' : '.55';
+  document.getElementById('myDisplayName').value = currentUser.displayName;
+  document.getElementById('membershipFormStatus').textContent = membershipFormUrl
+    ? 'A membership form is on file — alumni download this exact file.'
+    : 'No form uploaded yet — the public download button currently generates a basic placeholder form.';
+
+  await Promise.all([loadStaffMembers(), loadPending()]);
+  renderMemberTable(); renderPending();
+  renderAdminNoticeList(); renderAdminPartnerList();
+  renderAdminEventList(); renderAdminAchievementList();
+
+  if(isAdmin){
+    await loadCommittee(); renderAdminCommitteeList();
+    await loadStaffAccounts(); renderStaffList(); renderAccountSelect();
+  }
+  showPanel('events');
+}
+function logout(){
+  sb.auth.signOut();
+  currentUser = null;
+  document.getElementById('loginBox').style.display = 'block';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('adminShell').classList.remove('active');
+}
+document.querySelectorAll('.admin-panel-btn').forEach(b=>b.addEventListener('click',()=>showPanel(b.dataset.panel)));
+function showPanel(name){
+  document.querySelectorAll('.admin-panel-btn').forEach(b=>b.classList.toggle('active', b.dataset.panel===name));
+  ['events','members','achievements','committee','membership','notices','partners','accounts'].forEach(p=>document.getElementById('panel-'+p).style.display = p===name ? 'block':'none');
+}
+
+// ============================================================================
+// ACCOUNT SETTINGS
+// ============================================================================
+function flashAccountSaved(){
+  document.getElementById('accountSaveMsg').style.display = 'block';
+  setTimeout(()=>document.getElementById('accountSaveMsg').style.display='none', 2500);
+}
+async function saveMyDisplayName(){
+  const name = document.getElementById('myDisplayName').value.trim();
+  if(!name) return;
+  const { error } = await sb.from('staff_profiles').update({ display_name:name }).eq('id', currentUser.id);
+  if(error){ alert('Could not save: ' + error.message); return; }
+  currentUser.displayName = name;
+  document.getElementById('adminGreeting').textContent = `Welcome, ${name}`;
+  flashAccountSaved();
+}
+async function changeMyPassword(){
+  const pw = document.getElementById('myNewPassword').value;
+  if(!pw || pw.length < 6){ alert('Password must be at least 6 characters.'); return; }
+  const { error } = await sb.auth.updateUser({ password:pw });
+  if(error){ alert('Could not change password: ' + error.message); return; }
+  document.getElementById('myNewPassword').value = '';
+  flashAccountSaved();
+}
+async function loadStaffAccounts(){
+  const { data } = await sb.from('staff_profiles').select('*').order('created_at');
+  staffList = data || [];
+}
+function renderStaffList(){
+  document.getElementById('staffList').innerHTML = staffList.map(s=>`
+    <div class="pend-row"><div style="font-size:13px;"><strong>${s.display_name}</strong><div class="pend-meta">${s.role}${s.id===currentUser.id?' · you':''}</div></div>
+      <select onchange="adminChangeRole('${s.id}', this.value)" ${s.id===currentUser.id?'disabled':''} style="padding:6px 10px;border:1.5px solid var(--line);border-radius:5px;font-size:12.5px;">
+        <option value="moderator" ${s.role==='moderator'?'selected':''}>Moderator</option>
+        <option value="admin" ${s.role==='admin'?'selected':''}>Admin</option>
+      </select></div>`).join('');
+}
+function renderAccountSelect(){
+  document.getElementById('accountSelect').innerHTML = staffList.map(s=>
+    `<option value="${s.id}">${s.display_name}</option>`).join('');
+}
+async function adminChangeRole(id, role){
+  const { error } = await sb.from('staff_profiles').update({ role }).eq('id', id);
+  if(error){ alert('Could not change role: ' + error.message); }
+  await loadStaffAccounts(); renderStaffList();
+}
+async function adminResetStaffPassword(){
+  const targetUserId = document.getElementById('accountSelect').value;
+  const newPassword = document.getElementById('resetPasswordInput').value;
+  if(!newPassword || newPassword.length < 6){ alert('Enter a new password of at least 6 characters.'); return; }
+  const { data, error } = await sb.functions.invoke('reset-staff-password', { body:{ targetUserId, newPassword } });
+  if(error || data?.error){ alert('Could not reset password: ' + (data?.error || error.message)); return; }
+  document.getElementById('resetPasswordInput').value = '';
+  flashAccountSaved();
+}
+
+// ============================================================================
+// BOOTSTRAP
+// ============================================================================
+renderFaq(); renderObjectives(); renderFeeHome();
+loadPublicData();
+(async function initSession(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session) await enterAdminSession();
+})();
+</script>
+
+</body>
+</html>
