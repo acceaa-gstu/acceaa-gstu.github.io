@@ -509,7 +509,6 @@
     <h2 style="font-size:26px;">Executive Committee</h2>
     <div class="committee-term">
       <h3 style="font-size:15px;">Current Committee</h3>
-      <span class="term-label">Founding term · 2024–2026</span>
     </div>
     <div class="exec-grid" id="execGrid"></div>
 
@@ -522,24 +521,7 @@
   <!-- MEMBERS -->
   <section id="members">
     <h2 style="font-size:26px;">Membership</h2>
-    <div class="fee-grid">
-      <div class="fee-card">
-        <h3>General Membership</h3>
-        <div class="fee-price">৳250 <span>one-time</span></div>
-        <ul><li>Open to any ACCE graduate</li><li>Voting rights</li><li>Right to contest elections</li></ul>
-      </div>
-      <div class="fee-card featured">
-        <h3>Life Membership</h3>
-        <div class="fee-price">৳2,500 <span>renews every 5 yrs</span></div>
-        <ul><li>All General Member benefits</li><li>Renewal fee set at time of renewal</li><li>Recognized as a long-term supporter</li></ul>
-      </div>
-      <div class="fee-card">
-        <h3>Honorary Membership</h3>
-        <div class="fee-price">— <span>by invitation</span></div>
-        <ul><li>Conferred by Executive Committee</li><li>For teachers & distinguished well-wishers</li><li>No voting rights (unless GA decides)</li></ul>
-      </div>
-    </div>
-    <p style="font-size:12.5px; color:var(--muted); max-width:560px;">Fees shown here are for reference only. Payment and processing is handled directly through the department office.</p>
+    <div class="fee-grid" id="feeGridFull"></div>
 
     <div class="how-to-join">
       <h3>How to Become a Member</h3>
@@ -553,10 +535,10 @@
     <div id="noticeList"></div>
 
     <h3 style="font-size:18px; margin:44px 0 4px;">Alumni Directory</h3>
-    <p style="font-size:13px; color:var(--muted); margin-top:0;">Search current members by batch, degree, or location.</p>
+    <p style="font-size:13px; color:var(--muted); margin-top:0;">Search current members by session, degree, or location.</p>
     <div class="dir-controls">
       <input id="searchBox" type="text" placeholder="Search by name, job, or location…">
-      <select id="batchFilter"><option value="">All batches</option></select>
+      <select id="batchFilter"><option value="">All sessions</option></select>
       <select id="degreeFilter"><option value="">All degrees</option></select>
     </div>
     <div class="grid-cards" id="cardGrid"></div>
@@ -630,7 +612,7 @@
               <div id="fProgrammeError" style="display:none; color:#B23A3A; font-size:11.5px; margin-top:6px;">Select at least one.</div>
             </div>
             <div class="field"><label>Student ID *</label><input id="fStudentId" required placeholder="e.g. 1801001"></div>
-            <div class="field"><label>Passing Year *</label><input id="fPassingYear" required type="number" min="1990" max="2026" placeholder="e.g. 2019"></div>
+            <div class="field"><label>Session *</label><select id="fPassingYear" required></select></div>
           </div>
         </div>
 
@@ -778,7 +760,7 @@
         <input id="achName" placeholder="Alumni name">
         <select id="achTag"><option value="Job">Job</option><option value="Higher Study">Higher Study</option><option value="Career">Career</option></select>
       </div>
-      <div class="admin-form-row"><input id="achBatch" type="number" placeholder="Batch (year)"><input id="achPhotoInput" type="file" accept="image/*"></div>
+      <div class="admin-form-row"><select id="achBatch"></select><input id="achPhotoInput" type="file" accept="image/*"></div>
       <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px;">Tip: use a square photo (e.g. 500×500px) — the photo slot is square, so a tall/portrait photo will get cropped.</div>
       <textarea id="achDesc" placeholder="Achievement details" rows="2" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:5px;margin-bottom:14px;"></textarea>
       <button class="btn btn-primary btn-sm" onclick="publishAchievement()">Publish Achievement</button>
@@ -795,7 +777,7 @@
           <input id="cmRole" placeholder="Role (e.g. President)">
         </div>
         <div class="admin-form-row">
-          <input id="cmBatch" type="number" placeholder="Batch (year)">
+          <select id="cmBatch"></select>
           <input id="cmPhotoInput" type="file" accept="image/*">
         </div>
         <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px;">Tip: use a square photo (e.g. 500×500px) — the photo slot is square, so a tall/portrait photo will get cropped.</div>
@@ -843,6 +825,24 @@
     </div>
 
     <div id="panel-membership" style="display:none;">
+      <h4 style="font-size:15px; margin-bottom:12px;">Membership Fees</h4>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Shown on the Home page and the Membership page.</p>
+      <div class="admin-form-row">
+        <input id="feeGeneralPrice" placeholder="General price, e.g. ৳250">
+        <input id="feeGeneralNote" placeholder="General note, e.g. one-time">
+      </div>
+      <div class="admin-form-row">
+        <input id="feeLifePrice" placeholder="Life price, e.g. ৳2,500">
+        <input id="feeLifeNote" placeholder="Life note, e.g. renews every 5 yrs">
+      </div>
+      <div class="admin-form-row">
+        <input id="feeHonoraryPrice" placeholder="Honorary price, e.g. —">
+        <input id="feeHonoraryNote" placeholder="Honorary note, e.g. by invitation">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveMembershipFees()">Save Fees</button>
+      <div id="feeSaveMsg" style="display:none; color:var(--ok); font-size:12.5px; margin-top:6px;">Saved.</div>
+
+      <h4 style="font-size:15px; margin:28px 0 12px; padding-top:18px; border-top:1px solid var(--line);">Membership Form</h4>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Upload the official membership form. Alumni will download this file from the Membership page.</p>
       <div class="admin-form-row">
         <input type="file" id="membershipFormInput" accept="application/pdf">
@@ -877,9 +877,8 @@
   <div class="modal">
     <div class="card-photo" id="modalAvatar" style="width:100%;height:80px;border-radius:8px;margin-bottom:14px;"></div>
     <h3 id="modalName"></h3><div class="role" id="modalRole"></div>
-    <div class="modal-row"><span>Batch</span><span id="modalBatch"></span></div>
+    <div class="modal-row"><span>Session</span><span id="modalBatch"></span></div>
     <div class="modal-row"><span>Degree</span><span id="modalDegree"></span></div>
-    <div class="modal-row"><span>Location</span><span id="modalLocation"></span></div>
     <div class="modal-row"><span>Email</span><span id="modalEmail"></span></div>
     <button class="btn btn-ghost modal-close" onclick="closeModal()">Close</button>
   </div>
@@ -890,7 +889,7 @@
     <h3 style="margin-bottom:16px;">Edit Member</h3>
     <div class="field-row two">
       <div class="field"><label>Full Name</label><input id="editName"></div>
-      <div class="field"><label>Passing Year</label><input id="editBatch" type="number"></div>
+      <div class="field"><label>Session</label><select id="editBatch"></select></div>
     </div>
     <div class="field-row two">
       <div class="field"><label>Programme</label><input id="editDegree"></div>
@@ -992,6 +991,7 @@ let notices = [];
 let partners = [];
 let pending = [];
 let membershipFormUrl = null;
+let membershipFees = { General:{price:'৳250',note:'one-time'}, Life:{price:'৳2,500',note:'renews every 5 yrs'}, Honorary:{price:'—',note:'by invitation'} };
 let currentUser = null;    // { id, username, displayName, role }
 let staffList = [];
 let editingMemberId = null;
@@ -1075,6 +1075,15 @@ async function loadMembershipForm(){
   const { data } = await sb.from('membership_form').select('*').eq('id',1).maybeSingle();
   membershipFormUrl = data?.file_url || null;
 }
+async function loadMembershipFees(){
+  const { data } = await sb.from('membership_fees').select('*');
+  const byTier = {}; (data||[]).forEach(f=>byTier[f.tier]=f);
+  membershipFees = {
+    General: byTier.General || { price:'৳250', note:'one-time' },
+    Life: byTier.Life || { price:'৳2,500', note:'renews every 5 yrs' },
+    Honorary: byTier.Honorary || { price:'—', note:'by invitation' }
+  };
+}
 async function loadPending(){
   const { data } = await sb.from('pending_submissions').select('*').order('submitted_at', { ascending:false });
   pending = (data||[]).map(p=>({ id:p.id, name:p.full_name, batch:p.passing_year,
@@ -1084,10 +1093,10 @@ async function loadPending(){
 async function loadPublicData(){
   await Promise.all([
     loadPublicMembers(), loadCommittee(), loadEvents(), loadAchievements(),
-    loadNotices(), loadPartners(), loadMembershipForm()
+    loadNotices(), loadPartners(), loadMembershipForm(), loadMembershipFees()
   ]);
   renderLedgerFilters(); renderGrid(); renderExec(); renderEvents('all'); renderHomeNews();
-  renderAchievements(); renderPartners(); renderNotices();
+  renderAchievements(); renderPartners(); renderNotices(); renderFeeHome(); renderFeeFull();
   loadAndRenderArchivedCommittees();
   handleDeepLink();
 }
@@ -1160,7 +1169,7 @@ function renderGrid(){
     <div class="card" onclick="openModal('${a.id}')">
       <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':defaultAvatarMark(a.gender,'55%')}</div>
       <div class="card-body"><h3>${a.name}</h3><div class="role">${a.role||''}</div>
-      <div class="tags"><span class="tag">${a.batch||''}</span><span class="tag">${a.degree||''}</span><span class="tag">${(a.location||'').split(', ')[1]||a.location||''}</span></div></div>
+      <div class="tags"><span class="tag">${a.batch||''}</span></div></div>
     </div>`).join('') || `<div style="padding:40px;text-align:center;color:var(--muted);">No matches yet.</div>`;
 }
 ['searchBox','batchFilter','degreeFilter'].forEach(id=>document.getElementById(id).addEventListener('input',renderGrid));
@@ -1173,7 +1182,6 @@ function openModal(id){
   document.getElementById('modalRole').textContent = a.role||'';
   document.getElementById('modalBatch').textContent = a.batch||'';
   document.getElementById('modalDegree').textContent = a.degree||'';
-  document.getElementById('modalLocation').textContent = a.location||'';
   document.getElementById('modalEmail').textContent = a.email||'';
   document.getElementById('modalBg').style.display = 'flex';
 }
@@ -1189,7 +1197,7 @@ function execCardHTML(e){
       <div class="exec-info">
         <h3>${e.name}</h3>
         <div class="exec-role">${e.role}</div>
-        <div class="exec-batch">Batch ${e.batch}</div>
+        <div class="exec-batch">Session ${e.batch}</div>
         <div class="exec-social">
           ${e.linkedin ? `<a class="soc-btn soc-li" href="${e.linkedin}" target="_blank" title="LinkedIn">in</a>` : ''}
           ${e.facebook ? `<a class="soc-btn soc-fb" href="${e.facebook}" target="_blank" title="Facebook">f</a>` : ''}
@@ -1244,6 +1252,20 @@ function formatEventDate(dateStr){
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
 }
 
+const SESSION_START_YEAR = 2012;
+function sessionYearOptionsHTML(selected){
+  const currentYear = new Date().getFullYear();
+  let opts = '<option value="">Select session</option>';
+  for(let y=currentYear; y>=SESSION_START_YEAR; y--){
+    opts += `<option value="${y}"${String(y)===String(selected)?' selected':''}>${y}</option>`;
+  }
+  return opts;
+}
+function populateSessionSelect(id, selected){
+  const el = document.getElementById(id);
+  if(el) el.innerHTML = sessionYearOptionsHTML(selected);
+}
+
 function openEventDetail(id){
   const e = events.find(x=>x.id===id);
   if(!e) return;
@@ -1264,7 +1286,7 @@ function openAchievementDetail(id){
   if(!a) return;
   currentDetailAchievement = a; currentDetailEvent = null;
   document.getElementById('edKind').textContent = a.tag;
-  document.getElementById('edTitle').textContent = `${a.name} · Batch ${a.batch||'—'}`;
+  document.getElementById('edTitle').textContent = `${a.name} · Session ${a.batch||'—'}`;
   document.getElementById('edDate').style.display = 'none';
   const photoEl = document.getElementById('edPhoto');
   if(a.photo){ photoEl.style.display = 'block'; photoEl.style.backgroundImage = `url('${a.photo}')`; }
@@ -1299,7 +1321,7 @@ function shareEvent(){
   } else if(currentDetailAchievement){
     const a = currentDetailAchievement;
     const url = location.origin + location.pathname + '#achievement-' + a.id;
-    shareLink(url, `${a.name} · Batch ${a.batch||'—'}`, a.text.slice(0,150));
+    shareLink(url, `${a.name} · Session ${a.batch||'—'}`, a.text.slice(0,150));
   }
 }
 function shareEventById(id, evt){
@@ -1314,7 +1336,7 @@ function shareAchievementById(id, evt){
   const a = achievementsFull.find(x=>x.id===id);
   if(!a) return;
   const url = location.origin + location.pathname + '#achievement-' + id;
-  shareLink(url, `${a.name} · Batch ${a.batch||'—'}`, a.text.slice(0,150));
+  shareLink(url, `${a.name} · Session ${a.batch||'—'}`, a.text.slice(0,150));
 }
 function shareNotice(id, evt){
   if(evt){ evt.stopPropagation(); }
@@ -1385,14 +1407,14 @@ function renderAdminEventList(){
 
 function achCardHTML(a){
   const photoStyle = a.photo ? ` style="background-image:url('${a.photo}')"` : '';
-  const defaultMark = a.photo ? '' : `<div class="ach-default-logo">${defaultAvatarIcon(30)}</div>`;
+  const defaultMark = a.photo ? '' : defaultAvatarMark(a.gender, '55%');
   return `
     <div class="ach-card" onclick="openAchievementDetail('${a.id}')">
       <div class="ach-photo"${photoStyle}>
         <span class="ach-tag-badge">${a.tag}</span>${defaultMark}
         <button class="share-icon-btn" title="Share" onclick="shareAchievementById('${a.id}', event)">&#8683;</button>
       </div>
-      <div class="ach-body"><h3>${a.name} · Batch ${a.batch}</h3><p>${a.text}</p></div>
+      <div class="ach-body"><h3>${a.name} · Session ${a.batch}</h3><p>${a.text}</p></div>
     </div>`;
 }
 function renderAchievements(){
@@ -1423,7 +1445,7 @@ function renderAdminAchievementList(){
   const el = document.getElementById('adminAchievementList');
   if(!achievementsFull.length){ el.innerHTML = `<div class="notice-empty">No achievements yet.</div>`; return; }
   el.innerHTML = achievementsFull.map(a=>`
-    <div class="pend-row"><div style="font-size:13px;"><strong>${a.name}</strong><div class="pend-meta">${a.tag} · Batch ${a.batch||'—'}</div></div>
+    <div class="pend-row"><div style="font-size:13px;"><strong>${a.name}</strong><div class="pend-meta">${a.tag} · Session ${a.batch||'—'}</div></div>
       <button class="approve-btn" style="background:#B23A3A;" onclick="deleteAchievement('${a.id}')">Delete</button></div>`).join('');
 }
 
@@ -1506,6 +1528,29 @@ async function uploadMembershipForm(){
   document.getElementById('membershipFormInput').value = '';
   document.getElementById('membershipFormStatus').textContent = `Uploaded: ${file.name} — alumni will now download this exact file.`;
 }
+
+function fillFeeFormInputs(){
+  document.getElementById('feeGeneralPrice').value = membershipFees.General.price;
+  document.getElementById('feeGeneralNote').value = membershipFees.General.note||'';
+  document.getElementById('feeLifePrice').value = membershipFees.Life.price;
+  document.getElementById('feeLifeNote').value = membershipFees.Life.note||'';
+  document.getElementById('feeHonoraryPrice').value = membershipFees.Honorary.price;
+  document.getElementById('feeHonoraryNote').value = membershipFees.Honorary.note||'';
+}
+async function saveMembershipFees(){
+  const rows = [
+    { tier:'General', price:document.getElementById('feeGeneralPrice').value.trim(), note:document.getElementById('feeGeneralNote').value.trim() },
+    { tier:'Life', price:document.getElementById('feeLifePrice').value.trim(), note:document.getElementById('feeLifeNote').value.trim() },
+    { tier:'Honorary', price:document.getElementById('feeHonoraryPrice').value.trim(), note:document.getElementById('feeHonoraryNote').value.trim() }
+  ];
+  if(rows.some(r=>!r.price)){ alert('Each tier needs a price (use — if not applicable).'); return; }
+  const { error } = await sb.from('membership_fees').upsert(rows.map(r=>({ ...r, updated_at:new Date().toISOString() })));
+  if(error){ alert('Could not save: ' + error.message); return; }
+  await loadMembershipFees();
+  renderFeeHome(); renderFeeFull();
+  document.getElementById('feeSaveMsg').style.display = 'block';
+  setTimeout(()=>{ document.getElementById('feeSaveMsg').style.display='none'; }, 2500);
+}
 function downloadMembershipForm(){
   if(membershipFormUrl){
     const a = document.createElement('a');
@@ -1518,8 +1563,8 @@ function downloadMembershipForm(){
   doc.setFont("helvetica","bold"); doc.setFontSize(15);
   doc.text("ACCEAA, GSTU — Membership Form", 14, 18);
   doc.setFont("helvetica","normal"); doc.setFontSize(10);
-  const fields = ["Full Name:", "Father's Name:", "Mother's Name:", "Date of Birth:", "Batch / Passing Year:",
-    "Programme:", "Student ID:", "Mailing Address:", "Permanent Address:", "Email:", "Mobile Phone:",
+  const fields = ["Full Name:", "Father's Name:", "Mother's Name:", "Date of Birth:", "Session:",
+    "Programme:", "Student ID:", "Permanent Address:", "Email:", "Mobile Phone:",
     "Membership Type (General / Life / Honorary):", "Signature:", "Date:"];
   let y = 32;
   fields.forEach(f=>{
@@ -1544,14 +1589,27 @@ function renderObjectives(){
   document.getElementById('statObjectives').textContent = String(objectives.length).padStart(2,'0');
 }
 
-const feeMini = [
-  {name:"General", price:"৳250", note:"one-time"},
-  {name:"Life", price:"৳2,500", note:"renews every 5 yrs"},
-  {name:"Honorary", price:"—", note:"by invitation"},
-];
 function renderFeeHome(){
-  document.getElementById('feeGridHome').innerHTML = feeMini.map((f,i)=>`
-    <div class="fee-card ${i===1?'featured':''}"><h3>${f.name} Membership</h3><div class="fee-price">${f.price} <span>${f.note}</span></div></div>`).join('');
+  const tiers = ['General','Life','Honorary'];
+  document.getElementById('feeGridHome').innerHTML = tiers.map((t,i)=>{
+    const f = membershipFees[t];
+    return `<div class="fee-card ${i===1?'featured':''}"><h3>${t} Membership</h3><div class="fee-price">${f.price} <span>${f.note||''}</span></div></div>`;
+  }).join('');
+}
+function renderFeeFull(){
+  const tiers = [
+    { key:'General', benefits:['Open to any ACCE graduate','Voting rights','Right to contest elections'] },
+    { key:'Life', benefits:['All General Member benefits','Renewal fee set at time of renewal','Recognized as a long-term supporter'] },
+    { key:'Honorary', benefits:['Conferred by Executive Committee','For teachers & distinguished well-wishers','No voting rights (unless GA decides)'] }
+  ];
+  document.getElementById('feeGridFull').innerHTML = tiers.map((t,i)=>{
+    const f = membershipFees[t.key];
+    return `<div class="fee-card ${i===1?'featured':''}">
+      <h3>${t.key} Membership</h3>
+      <div class="fee-price">${f.price} <span>${f.note||''}</span></div>
+      <ul>${t.benefits.map(b=>`<li>${b}</li>`).join('')}</ul>
+    </div>`;
+  }).join('');
 }
 
 document.getElementById('photoInput').addEventListener('change', function(e){
@@ -1615,7 +1673,7 @@ function renderPending(){
   if(!pending.length){ el.innerHTML = `<div class="notice-empty">No pending submissions.</div>`; return; }
   el.innerHTML = pending.map(p=>`
     <div class="pend-row"><div class="pend-info"><div class="ach-photo" style="width:34px;height:34px;font-size:12px;">${initials(p.name)}</div>
-      <div><div style="font-weight:600;font-size:13.5px;">${p.name}</div><div class="pend-meta">Batch ${p.batch||'—'} · ${p.note}</div></div></div>
+      <div><div style="font-weight:600;font-size:13.5px;">${p.name}</div><div class="pend-meta">Session ${p.batch||'—'} · ${p.note}</div></div></div>
       <div style="display:flex; gap:6px;">
         <button class="approve-btn" onclick="approvePending('${p.id}', this)">Approve</button>
         <button class="approve-btn" style="background:#B23A3A;" onclick="rejectPending('${p.id}', this)">Reject</button>
@@ -1641,7 +1699,7 @@ function renderMemberTable(){
       <td>${a.name}</td><td>${a.batch||''}</td><td>${a.degree||''}</td><td>${a.org||'—'}</td><td>${a.designation||'—'}</td><td>${a.email||''}</td>
     </tr>`).join('');
   document.getElementById('memberTable').innerHTML = `
-    <thead><tr><th>Name</th><th>Batch</th><th>Programme</th><th>Organization</th><th>Designation</th><th>Email</th></tr></thead>
+    <thead><tr><th>Name</th><th>Session</th><th>Programme</th><th>Organization</th><th>Designation</th><th>Email</th></tr></thead>
     <tbody>${rows}</tbody>`;
 }
 
@@ -1650,7 +1708,7 @@ function openEditModal(id){
   const a = alumniStaff.find(x=>x.id===id);
   if(!a) return;
   document.getElementById('editName').value = a.name;
-  document.getElementById('editBatch').value = a.batch||'';
+  populateSessionSelect('editBatch', a.batch);
   document.getElementById('editDegree').value = a.degree||'';
   document.getElementById('editStudentId').value = a.studentId || '';
   document.getElementById('editOrg').value = a.org || '';
@@ -1721,7 +1779,7 @@ function downloadMembersExcel(){
   const rows = alumniStaff.map(a=>({
     Name:a.name, "Father's Name":a.fatherName||'', "Mother's Name":a.motherName||'', Gender:a.gender||'',
     "Date of Birth":a.dob||'', "Blood Group":a.bloodGroup||'',
-    Batch:a.batch, Programme:a.degree, "Student ID":a.studentId||'', Organization:a.org||'',
+    Session:a.batch, Programme:a.degree, "Student ID":a.studentId||'', Organization:a.org||'',
     Designation:a.designation||'', Location:a.location, "Permanent Address":a.permanentAddress||'',
     Email:a.email, Mobile:a.mobile||'', LinkedIn:a.linkedin||'', Facebook:a.facebook||''
   }));
@@ -1744,7 +1802,7 @@ function downloadMembersPDF(){
     if(y > 280){ doc.addPage(); y = 16; }
     doc.setFont("helvetica","bold"); doc.text(`${i+1}. ${a.name}`, 14, y);
     doc.setFont("helvetica","normal");
-    doc.text(`Batch ${a.batch||'—'} · ${a.degree||''} · ${a.designation||'—'} at ${a.org||'—'}`, 14, y+5);
+    doc.text(`Session ${a.batch||'—'} · ${a.degree||''} · ${a.designation||'—'} at ${a.org||'—'}`, 14, y+5);
     doc.text(`${a.email||''}${a.mobile ? '  ·  ' + a.mobile : ''}  ·  ${a.location||''}`, 14, y+10);
     y += 18;
   });
@@ -1765,7 +1823,7 @@ function editCommitteeMember(id){
   editingCommitteeId = id;
   document.getElementById('cmName').value = c.name;
   document.getElementById('cmRole').value = c.role;
-  document.getElementById('cmBatch').value = c.batch||'';
+  populateSessionSelect('cmBatch', c.batch);
   document.getElementById('cmLinkedin').value = c.linkedin||'';
   document.getElementById('cmFacebook').value = c.facebook||'';
   document.getElementById('cmEmail').value = c.email||'';
@@ -1830,7 +1888,7 @@ function renderAdminCommitteeList(){
   document.getElementById('committeeTermLabel').textContent = currentTermLabel ? `Editing: ${currentTermLabel}` : 'No current term yet — save a member to start one.';
   if(!execCommittee.length){ el.innerHTML = `<div class="notice-empty">No committee members in the current term yet.</div>`; return; }
   el.innerHTML = execCommittee.map(c=>`
-    <div class="pend-row"><div style="font-size:13px;"><strong>${c.name}</strong><div class="pend-meta">${c.role} · Batch ${c.batch||'—'}</div></div>
+    <div class="pend-row"><div style="font-size:13px;"><strong>${c.name}</strong><div class="pend-meta">${c.role} · Session ${c.batch||'—'}</div></div>
       <div style="display:flex; gap:6px;">
         <button class="btn btn-ghost btn-sm" onclick="editCommitteeMember('${c.id}')">Edit</button>
         <button class="approve-btn" style="background:#B23A3A;" onclick="deleteCommitteeMember('${c.id}')">Delete</button>
@@ -1882,6 +1940,7 @@ async function loginAsUI(){
   document.getElementById('membershipFormStatus').textContent = membershipFormUrl
     ? 'A membership form is on file — alumni download this exact file.'
     : 'No form uploaded yet — the public download button currently generates a basic placeholder form.';
+  fillFeeFormInputs();
 
   await Promise.all([loadStaffMembers(), loadPending()]);
   renderMemberTable(); renderPending();
@@ -1968,6 +2027,9 @@ async function adminResetStaffPassword(){
 // BOOTSTRAP
 // ============================================================================
 renderFaq(); renderObjectives(); renderFeeHome();
+populateSessionSelect('fPassingYear');
+populateSessionSelect('achBatch');
+populateSessionSelect('cmBatch');
 loadPublicData();
 (async function initSession(){
   const { data:{ session } } = await sb.auth.getSession();

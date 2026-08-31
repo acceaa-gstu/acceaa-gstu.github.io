@@ -425,6 +425,25 @@ create policy "public can view membership form" on public.membership_form for se
 create policy "staff can update membership form" on public.membership_form for update using (public.is_staff());
 
 -- ============================================================================
+-- 9b. MEMBERSHIP FEES  (price + note per tier, editable from the admin panel)
+-- ============================================================================
+
+create table public.membership_fees (
+  tier text primary key check (tier in ('General','Life','Honorary')),
+  price text not null,
+  note text,
+  updated_at timestamptz not null default now()
+);
+insert into public.membership_fees (tier, price, note) values
+  ('General', '৳250', 'one-time'),
+  ('Life', '৳2,500', 'renews every 5 yrs'),
+  ('Honorary', '—', 'by invitation');
+
+alter table public.membership_fees enable row level security;
+create policy "public can view membership fees" on public.membership_fees for select using (true);
+create policy "staff can update membership fees" on public.membership_fees for update using (public.is_staff());
+
+-- ============================================================================
 -- 10. STORAGE BUCKETS
 -- "photos"    — public, staff-writable: member/committee/event/achievement/
 --               partner photos, organized in subfolders in the object path
