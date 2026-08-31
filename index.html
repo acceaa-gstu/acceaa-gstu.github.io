@@ -572,21 +572,6 @@
     <div class="event-grid" id="eventList"></div>
   </section>
 
-  <!-- EVENT / NEWS READING PAGE -->
-  <section id="eventDetail">
-    <button class="btn btn-ghost btn-sm" onclick="closeEventDetail()">&larr; Back to Events &amp; News</button>
-    <div style="margin-top:22px; max-width:740px;">
-      <span class="kind-tag" id="edKind" style="margin-left:0; font-size:11px;"></span>
-      <h1 id="edTitle" style="font-size:28px; line-height:1.25; margin:12px 0 8px;"></h1>
-      <div id="edDate" style="color:var(--muted); font-size:13px; margin-bottom:22px; font-family:'IBM Plex Mono',monospace;"></div>
-      <div id="edPhoto" style="width:100%; aspect-ratio:16/9; border-radius:10px; background-size:cover; background-position:center; margin-bottom:26px; display:none;"></div>
-      <p id="edDesc" style="font-size:15.5px; line-height:1.8; color:var(--ink-2); white-space:pre-wrap;"></p>
-      <div style="margin-top:30px; display:flex; gap:10px;">
-        <button class="btn btn-primary btn-sm" onclick="shareEvent()">Share</button>
-        <button class="btn btn-ghost btn-sm" onclick="closeEventDetail()">Back to Events &amp; News</button>
-      </div>
-    </div>
-  </section>
 
   <!-- SUBMIT -->
   <section id="submit">
@@ -947,6 +932,22 @@
   </div>
 </div>
 
+<div class="modal-bg" id="eventDetailModalBg">
+  <div class="modal" style="max-width:640px; text-align:left; max-height:88vh; overflow-y:auto; border-top:none; padding:0;">
+    <div id="edPhoto" style="width:100%; aspect-ratio:16/9; background-size:cover; background-position:center; display:none;"></div>
+    <div style="padding:28px 30px 30px;">
+      <span class="kind-tag" id="edKind" style="margin-left:0; font-size:11px;"></span>
+      <h1 id="edTitle" style="font-size:24px; line-height:1.25; margin:10px 0 6px;"></h1>
+      <div id="edDate" style="color:var(--muted); font-size:12.5px; margin-bottom:18px; font-family:'IBM Plex Mono',monospace;"></div>
+      <p id="edDesc" style="font-size:14.5px; line-height:1.75; color:var(--ink-2); white-space:pre-wrap;"></p>
+      <div style="margin-top:24px; display:flex; gap:10px;">
+        <button class="btn btn-primary btn-sm" onclick="shareEvent()">Share</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeEventDetail()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============================================================================
 // SUPABASE CLIENT
@@ -1253,7 +1254,7 @@ function openEventDetail(id){
   else { photoEl.style.display = 'none'; }
   document.getElementById('edDesc').textContent = e.desc;
   history.pushState(null, '', '#event-' + id);
-  switchTab('eventDetail');
+  document.getElementById('eventDetailModalBg').style.display = 'flex';
 }
 function openAchievementDetail(id){
   const a = achievementsFull.find(x=>x.id===id);
@@ -1267,12 +1268,14 @@ function openAchievementDetail(id){
   else { photoEl.style.display = 'none'; }
   document.getElementById('edDesc').textContent = a.text;
   history.pushState(null, '', '#achievement-' + id);
-  switchTab('eventDetail');
+  document.getElementById('eventDetailModalBg').style.display = 'flex';
 }
 function closeEventDetail(){
   history.pushState(null, '', location.pathname + location.search);
-  switchTab('events');
+  document.getElementById('eventDetailModalBg').style.display = 'none';
+  currentDetailEvent = null; currentDetailAchievement = null;
 }
+document.getElementById('eventDetailModalBg').addEventListener('click', e=>{ if(e.target.id==='eventDetailModalBg') closeEventDetail(); });
 
 async function shareLink(url, title, text){
   if(navigator.share){
