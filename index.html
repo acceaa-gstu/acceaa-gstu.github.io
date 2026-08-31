@@ -36,7 +36,7 @@
   nav.tabs button:hover{color:#fff; background:rgba(255,255,255,.06);}
   nav.tabs button.active{color:var(--ink); background:var(--brass-soft);}
 
-  main{max-width:1120px; margin:0 auto; padding:40px 32px 80px;}
+  main{width:100%; max-width:1120px; margin:0 auto; padding:40px 32px 80px;}
   section{display:none;}
   section.active{display:block; animation:fade .35s ease;}
   @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
@@ -714,7 +714,7 @@
   <span class="back-to-site" onclick="switchTab('home')">← Back to website</span>
 </header>
 
-<section id="admin" style="max-width:1120px; margin:0 auto; padding:40px 32px 80px; min-height:calc(100vh - 64px);">
+<section id="admin" style="width:100%; max-width:1120px; margin:0 auto; padding:40px 32px 80px; min-height:calc(100vh - 64px); box-sizing:border-box;">
   <div class="login-box" id="loginBox">
     <h3>Staff Login</h3>
     <p>Sign in with your username and password.</p>
