@@ -1130,7 +1130,7 @@ function renderGrid(){
   const grid = document.getElementById('cardGrid');
   grid.innerHTML = filtered.map(a=>`
     <div class="card" onclick="openModal('${a.id}')">
-      <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':defaultAvatarMark(a.gender,40)}</div>
+      <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':defaultAvatarMark(a.gender,'55%')}</div>
       <div class="card-body"><h3>${a.name}</h3><div class="role">${a.role||''}</div>
       <div class="tags"><span class="tag">${a.batch||''}</span><span class="tag">${a.degree||''}</span><span class="tag">${(a.location||'').split(', ')[1]||a.location||''}</span></div></div>
     </div>`).join('') || `<div style="padding:40px;text-align:center;color:var(--muted);">No matches yet.</div>`;
@@ -1157,7 +1157,7 @@ function execCardHTML(e){
   const photoStyle = e.photo ? ` style="background-image:url('${e.photo}')"` : '';
   return `
     <div class="exec-card">
-      <div class="exec-photo"${photoStyle}>${e.photo ? '' : defaultAvatarMark(e.gender,52)}</div>
+      <div class="exec-photo"${photoStyle}>${e.photo ? '' : defaultAvatarMark(e.gender,'55%')}</div>
       <div class="exec-info">
         <h3>${e.name}</h3>
         <div class="exec-role">${e.role}</div>
