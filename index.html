@@ -15,8 +15,10 @@
     --paper:#F3F2ED; --paper-2:#FFFFFF; --muted:#5B6472; --line:#DDD9CC; --ok:#3F7859; --radius:6px;
   }
   *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  html{scroll-behavior:smooth; height:100%;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+    min-height:100%; display:flex; flex-direction:column;}
+  main{flex:1 0 auto;}
   h1,h2,h3,.display{font-family:'Fraunces',serif; font-weight:600; letter-spacing:-0.01em; margin:0;}
   .mono{font-family:'IBM Plex Mono',monospace;}
   p{line-height:1.65;}
@@ -262,7 +264,7 @@
   .modal-close{margin-top:18px; width:100%;}
 
   footer{text-align:center; padding:26px; color:var(--muted); font-size:12px; border-top:1px solid var(--line);}
-  .staff-link{color:var(--muted); text-decoration:underline; cursor:pointer; font-size:11px; opacity:.6;}
+  .staff-link{color:var(--muted); text-decoration:none; cursor:pointer; font-size:11px; opacity:.3;}
   .staff-link:hover{opacity:1;}
 
   /* ---------- ADMIN ---------- */
@@ -311,8 +313,8 @@
   .footer-social .soc-btn{width:24px; height:24px; font-size:10px;}
   .footer-bottom{display:flex; justify-content:space-between; align-items:center; padding:12px 0; flex-wrap:wrap; gap:8px;}
   .footer-bottom span{font-size:11px; color:#8D97AC;}
-  .footer-bottom .staff-link{color:#8D97AC; opacity:1;}
-  .footer-bottom .staff-link:hover{color:#fff;}
+  .footer-bottom .staff-link{font-size:9px; opacity:.28; padding:4px 6px;}
+  .footer-bottom .staff-link:hover{opacity:.85; color:#fff;}
 
   @media(max-width:960px){
     .hamburger{display:block;}
@@ -699,7 +701,7 @@
     </div>
     <div class="footer-bottom">
       <span>© 2026 ACCEAA, GSTU · Dept. of ACCE, GSTU, Gopalganj · acceaa.gstu@example.com</span>
-      <span class="staff-link" onclick="switchTab('admin')">Staff Login</span>
+      <span class="staff-link" onclick="switchTab('admin')" title="Staff">•</span>
     </div>
   </div>
 </footer>
