@@ -105,6 +105,7 @@ create table public.members (
   designation text,
   photo_url text,
   membership_type text not null default 'General' check (membership_type in ('General','Life','Honorary')),
+  gender text, -- low-sensitivity, public copy of the private gender field; used only to pick a default avatar icon
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -253,13 +254,14 @@ begin
       linkedin = s.linkedin, facebook = s.facebook, programme = s.programme,
       passing_year = s.passing_year, organization = s.organization,
       designation = s.designation, photo_url = coalesce(s.photo_url, photo_url),
+      gender = coalesce(s.gender, gender),
       updated_at = now()
     where id = target_id;
   else
     insert into public.members (full_name, location, email, linkedin, facebook, programme,
-      passing_year, organization, designation, photo_url)
+      passing_year, organization, designation, photo_url, gender)
     values (s.full_name, s.location, s.email, s.linkedin, s.facebook, s.programme,
-      s.passing_year, s.organization, s.designation, s.photo_url)
+      s.passing_year, s.organization, s.designation, s.photo_url, s.gender)
     returning id into target_id;
   end if;
 
@@ -307,6 +309,7 @@ create table public.committee (
   email text,
   phone text,
   photo_url text,
+  gender text, -- used only to pick a default avatar icon when no photo is set
   sort_order int not null default 0,
   created_at timestamptz not null default now()
 );
