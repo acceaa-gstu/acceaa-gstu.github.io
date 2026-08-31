@@ -210,6 +210,7 @@
   .card h3{font-size:15px;} .card .role{color:var(--muted); font-size:12.5px; margin-top:2px;}
   .tags{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
   .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; background:var(--paper); border:1px solid var(--line); padding:3px 8px; border-radius:20px; color:var(--muted);}
+  .card-social{display:flex; gap:8px; margin-top:12px;}
 
   /* ---------- EVENTS ---------- */
   .filter-row{display:flex; gap:8px; margin:16px 0 22px;}
@@ -542,6 +543,10 @@
       <select id="degreeFilter"><option value="">All degrees</option></select>
     </div>
     <div class="grid-cards" id="cardGrid"></div>
+    <div id="loadMoreWrap" style="display:none; text-align:center; margin-top:24px;">
+      <div id="loadMoreCount" style="font-size:12.5px; color:var(--muted); margin-bottom:10px;"></div>
+      <button class="btn btn-ghost btn-sm" onclick="loadMoreMembers()">Load More</button>
+    </div>
   </section>
 
   <!-- EVENTS/NEWS -->
@@ -1157,6 +1162,25 @@ function renderLedgerFilters(){
   degrees.forEach(d=>degreeFilter.insertAdjacentHTML('beforeend', `<option value="${d}">${d}</option>`));
 }
 
+const MEMBER_PAGE_SIZE = 24;
+let memberDisplayCount = MEMBER_PAGE_SIZE;
+
+function memberCardHTML(a){
+  return `
+    <div class="card" onclick="openModal('${a.id}')">
+      <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':defaultAvatarMark(a.gender,'55%')}</div>
+      <div class="card-body">
+        <h3>${a.name}</h3><div class="role">${a.role||''}</div>
+        <div class="tags"><span class="tag">Session ${a.batch||''}</span></div>
+        <div class="card-social" onclick="event.stopPropagation()">
+          ${a.linkedin ? `<a class="soc-btn soc-li" href="${a.linkedin}" target="_blank" title="LinkedIn">in</a>` : ''}
+          ${a.facebook ? `<a class="soc-btn soc-fb" href="${a.facebook}" target="_blank" title="Facebook">f</a>` : ''}
+          ${a.email ? `<a class="soc-btn soc-em" href="mailto:${a.email}" title="Email">@</a>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderGrid(){
   document.getElementById('statTotalMembers').textContent = String(alumniPublic.length).padStart(2,'0');
   const q = document.getElementById('searchBox').value.toLowerCase();
@@ -1165,14 +1189,25 @@ function renderGrid(){
   const filtered = alumniPublic.filter(a=> (!batch||a.batch==batch) && (!degree||a.degree===degree) &&
     (!q || a.name.toLowerCase().includes(q) || (a.role||'').toLowerCase().includes(q) || (a.location||'').toLowerCase().includes(q)));
   const grid = document.getElementById('cardGrid');
-  grid.innerHTML = filtered.map(a=>`
-    <div class="card" onclick="openModal('${a.id}')">
-      <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':defaultAvatarMark(a.gender,'55%')}</div>
-      <div class="card-body"><h3>${a.name}</h3><div class="role">${a.role||''}</div>
-      <div class="tags"><span class="tag">${a.batch||''}</span></div></div>
-    </div>`).join('') || `<div style="padding:40px;text-align:center;color:var(--muted);">No matches yet.</div>`;
+  const visible = filtered.slice(0, memberDisplayCount);
+  grid.innerHTML = visible.map(memberCardHTML).join('') || `<div style="padding:40px;text-align:center;color:var(--muted);">No matches yet.</div>`;
+
+  const loadMoreWrap = document.getElementById('loadMoreWrap');
+  if(filtered.length > memberDisplayCount){
+    loadMoreWrap.style.display = 'block';
+    document.getElementById('loadMoreCount').textContent = `Showing ${visible.length} of ${filtered.length}`;
+  } else {
+    loadMoreWrap.style.display = 'none';
+  }
 }
-['searchBox','batchFilter','degreeFilter'].forEach(id=>document.getElementById(id).addEventListener('input',renderGrid));
+function loadMoreMembers(){
+  memberDisplayCount += MEMBER_PAGE_SIZE;
+  renderGrid();
+}
+['searchBox','batchFilter','degreeFilter'].forEach(id=>document.getElementById(id).addEventListener('input', ()=>{
+  memberDisplayCount = MEMBER_PAGE_SIZE;
+  renderGrid();
+}));
 
 function openModal(id){
   const a = alumniPublic.find(x=>x.id===id);
