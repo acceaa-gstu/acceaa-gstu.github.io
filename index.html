@@ -75,7 +75,7 @@
   .ach-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px;}
   .ach-card{background:var(--paper-2); border:1px solid var(--line); border-radius:12px; overflow:hidden; transition:.15s;}
   .ach-card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(20,33,61,.12);}
-  .ach-photo{width:100%; height:150px; background:linear-gradient(135deg,var(--ink-2),var(--ink)); background-size:cover; background-position:center;
+  .ach-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--ink-2),var(--ink)); background-size:cover; background-position:center;
     position:relative; display:flex; align-items:center; justify-content:center;}
   .ach-photo::before{content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(20,33,61,.55), rgba(20,33,61,.1) 65%);}
   .ach-default-logo{position:relative; z-index:1; width:58px; height:58px; border-radius:50%; background:var(--brass); color:var(--ink);
@@ -88,7 +88,7 @@
 
   .news-strip{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px;}
   .news-card{background:var(--paper-2); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
-  .news-photo{height:100px; background:linear-gradient(135deg,var(--brass-soft),var(--brass)); display:flex; align-items:center; justify-content:center;
+  .news-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--brass-soft),var(--brass)); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center;
     font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(20,33,61,.55);}
   .news-body{padding:16px;}
   .news-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--brass); letter-spacing:.06em;}
@@ -177,7 +177,7 @@
   .exec-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; margin-top:16px;}
   .exec-card{background:var(--paper-2); border:1px solid var(--line); border-radius:12px; overflow:hidden; text-align:center; transition:.15s;}
   .exec-card:hover{transform:translateY(-3px); box-shadow:0 8px 22px rgba(20,33,61,.1);}
-  .exec-photo{height:150px; background:linear-gradient(135deg,var(--ink-2),var(--ink)); display:flex; align-items:center; justify-content:center;
+  .exec-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--ink-2),var(--ink)); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center;
     color:var(--brass-soft); font-family:'Fraunces',serif; font-weight:600; font-size:32px;}
   .exec-info{padding:16px 14px 20px;}
   .exec-info h3{font-size:15px;}
@@ -201,7 +201,7 @@
   .grid-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px;}
   .card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; overflow:hidden; cursor:pointer; transition:.15s;}
   .card:hover{border-color:var(--brass); transform:translateY(-2px); box-shadow:0 6px 18px rgba(20,33,61,.08);}
-  .card-photo{height:110px; background:linear-gradient(135deg,var(--ink-2),var(--ink)); display:flex; align-items:center; justify-content:center;
+  .card-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--ink-2),var(--ink)); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center;
     color:var(--brass-soft); font-family:'Fraunces',serif; font-weight:600; font-size:22px;}
   .card-body{padding:16px;}
   .card h3{font-size:15px;} .card .role{color:var(--muted); font-size:12.5px; margin-top:2px;}
@@ -214,7 +214,7 @@
   .chip.active{background:var(--ink); color:#fff; border-color:var(--ink);}
   .event-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px;}
   .event-card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
-  .event-photo{height:150px; background:linear-gradient(135deg,var(--brass-soft),var(--brass)); display:flex; align-items:center; justify-content:center;
+  .event-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--brass-soft),var(--brass)); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center;
     font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(20,33,61,.55); position:relative;}
   .event-date-badge{position:absolute; top:12px; left:12px; background:var(--ink); color:#fff; border-radius:6px; padding:6px 10px; text-align:center;}
   .event-date-badge .d{font-family:'Fraunces',serif; font-size:17px; line-height:1;}
@@ -647,7 +647,7 @@
             </div>
             <div class="photo-upload-text">
               <strong>Choose Photo</strong>
-              <span>Click to upload a recent photograph (JPG or PNG)</span>
+              <span>Click to upload a recent photograph (JPG or PNG) — a square photo (e.g. 500×500px) works best</span>
             </div>
           </div>
           <input type="file" id="photoInput" accept="image/*" style="display:none">
@@ -747,6 +747,7 @@
         <select id="evKind"><option value="event">Event</option><option value="news">News</option></select>
       </div>
       <div class="admin-form-row"><input id="evDate" type="date"><input id="evPhotoInput" type="file" accept="image/*"></div>
+      <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px;">Tip: use a square photo (e.g. 500×500px) — the photo slot is square, so a tall/portrait photo will get cropped.</div>
       <textarea id="evDesc" placeholder="Description" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:5px;margin-bottom:14px;"></textarea>
       <button class="btn btn-primary btn-sm" onclick="publishEvent()">Publish</button>
       <div id="adminEventList" style="margin-top:20px;"></div>
@@ -775,6 +776,7 @@
         <select id="achTag"><option value="Job">Job</option><option value="Higher Study">Higher Study</option><option value="Career">Career</option></select>
       </div>
       <div class="admin-form-row"><input id="achBatch" type="number" placeholder="Batch (year)"><input id="achPhotoInput" type="file" accept="image/*"></div>
+      <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px;">Tip: use a square photo (e.g. 500×500px) — the photo slot is square, so a tall/portrait photo will get cropped.</div>
       <textarea id="achDesc" placeholder="Achievement details" rows="2" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:5px;margin-bottom:14px;"></textarea>
       <button class="btn btn-primary btn-sm" onclick="publishAchievement()">Publish Achievement</button>
       <div id="adminAchievementList" style="margin-top:20px;"></div>
@@ -793,6 +795,7 @@
           <input id="cmBatch" type="number" placeholder="Batch (year)">
           <input id="cmPhotoInput" type="file" accept="image/*">
         </div>
+        <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px;">Tip: use a square photo (e.g. 500×500px) — the photo slot is square, so a tall/portrait photo will get cropped.</div>
         <div class="admin-form-row">
           <input id="cmLinkedin" placeholder="LinkedIn URL">
           <input id="cmFacebook" placeholder="Facebook URL">
@@ -1124,9 +1127,10 @@ document.getElementById('modalBg').addEventListener('click', e=>{if(e.target.id=
 
 function execCardHTML(e){
   const profileUrl = e.linkedin || e.facebook || '#';
+  const photoStyle = e.photo ? ` style="background-image:url('${e.photo}')"` : '';
   return `
     <div class="exec-card">
-      <div class="exec-photo">${initials(e.name)}</div>
+      <div class="exec-photo"${photoStyle}>${e.photo ? '' : initials(e.name)}</div>
       <div class="exec-info">
         <h3>${e.name}</h3>
         <div class="exec-role">${e.role}</div>
@@ -1209,7 +1213,7 @@ function renderAdminEventList(){
 
 function achCardHTML(a){
   const photoStyle = a.photo ? ` style="background-image:url('${a.photo}')"` : '';
-  const defaultMark = a.photo ? '' : `<div class="ach-default-logo">A</div>`;
+  const defaultMark = a.photo ? '' : `<div class="ach-default-logo">${initials(a.name)}</div>`;
   return `
     <div class="ach-card">
       <div class="ach-photo"${photoStyle}><span class="ach-tag-badge">${a.tag}</span>${defaultMark}</div>
