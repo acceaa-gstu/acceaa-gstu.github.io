@@ -590,32 +590,20 @@
               <select id="fBloodGroup"><option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
             </div>
           </div>
-          <div class="field-row">
-            <div class="field"><label>Religion</label><input id="fReligion" placeholder="Enter your religion"></div>
-            <div class="field"><label>NID</label><input id="fNid" type="number" placeholder="Enter your NID number"></div>
-            <div class="field"><label>Nationality</label><input id="fNationality" placeholder="Enter your nationality"></div>
-            <div class="field"><label>Marital Status</label>
-              <select id="fMaritalStatus"><option value="">Select marital status</option><option>Single</option><option>Married</option></select>
-            </div>
-          </div>
         </div>
 
         <div class="form-section">
           <h3 class="form-section-title">Contact Information</h3>
-          <div class="field-row two">
-            <div class="field"><label>Mailing Address *</label><input id="fMailingAddress" required placeholder="Enter your mailing address"></div>
-            <div class="field"><label>Permanent Address *</label><input id="fPermanentAddress" required placeholder="Enter your permanent address"></div>
+          <div class="field">
+            <label>Permanent Address *</label>
+            <textarea id="fPermanentAddress" required rows="3" placeholder="Enter your permanent address"></textarea>
           </div>
-          <div class="field-row">
+          <div class="field-row two">
             <div class="field"><label>Email *</label><input id="fEmail" required type="email" placeholder="Enter your email address"></div>
-            <div class="field"><label>Land Phone</label><input id="fLandPhone" placeholder="Enter your land phone number"></div>
             <div class="field"><label>Mobile Phone *</label><input id="fMobilePhone" required placeholder="Enter your mobile phone number"></div>
           </div>
           <div class="field-row two">
-            <div class="field"><label>Website (if any)</label><input id="fWebsite" placeholder="Enter your website URL"></div>
             <div class="field"><label>LinkedIn</label><input id="fLinkedin" placeholder="Your LinkedIn profile URL"></div>
-          </div>
-          <div class="field-row two">
             <div class="field"><label>Facebook</label><input id="fFacebook" placeholder="Your Facebook profile URL"></div>
           </div>
         </div>
@@ -623,8 +611,14 @@
         <div class="form-section">
           <h3 class="form-section-title">Academic Information</h3>
           <div class="field-row">
-            <div class="field"><label>Programme *</label>
-              <select id="fProgramme" required><option value="">Select programme</option><option>B.Sc. in Applied Chemistry & Chemical Engineering</option><option>M.Sc.</option><option>PhD</option></select>
+            <div class="field" style="flex:1.4;">
+              <label>Programme *</label>
+              <div style="display:flex; gap:18px; flex-wrap:wrap; padding:11px 0 0;">
+                <label style="display:flex; align-items:center; gap:6px; font-weight:400; font-size:14px; color:var(--ink);"><input type="checkbox" class="fProgrammeChk" value="B.Sc."> B.Sc.</label>
+                <label style="display:flex; align-items:center; gap:6px; font-weight:400; font-size:14px; color:var(--ink);"><input type="checkbox" class="fProgrammeChk" value="M.Sc."> M.Sc.</label>
+                <label style="display:flex; align-items:center; gap:6px; font-weight:400; font-size:14px; color:var(--ink);"><input type="checkbox" class="fProgrammeChk" value="PhD"> PhD</label>
+              </div>
+              <div id="fProgrammeError" style="display:none; color:#B23A3A; font-size:11.5px; margin-top:6px;">Select at least one.</div>
             </div>
             <div class="field"><label>Student ID *</label><input id="fStudentId" required placeholder="e.g. 1801001"></div>
             <div class="field"><label>Passing Year *</label><input id="fPassingYear" required type="number" min="1990" max="2026" placeholder="e.g. 2019"></div>
@@ -882,7 +876,7 @@
 </div>
 
 <div class="modal-bg" id="editModalBg">
-  <div class="modal" style="max-width:480px; text-align:left;">
+  <div class="modal" style="max-width:520px; text-align:left; max-height:88vh; overflow-y:auto;">
     <h3 style="margin-bottom:16px;">Edit Member</h3>
     <div class="field-row two">
       <div class="field"><label>Full Name</label><input id="editName"></div>
@@ -893,14 +887,34 @@
       <div class="field"><label>Student ID</label><input id="editStudentId"></div>
     </div>
     <div class="field-row two">
+      <div class="field"><label>Father's Name</label><input id="editFatherName"></div>
+      <div class="field"><label>Mother's Name</label><input id="editMotherName"></div>
+    </div>
+    <div class="field-row two">
+      <div class="field"><label>Gender</label>
+        <select id="editGender"><option value="">—</option><option>Male</option><option>Female</option><option>Other</option></select>
+      </div>
+      <div class="field"><label>Date of Birth</label><input id="editDob" type="date"></div>
+    </div>
+    <div class="field-row two">
+      <div class="field"><label>Blood Group</label>
+        <select id="editBloodGroup"><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+      </div>
+      <div class="field"><label>Location</label><input id="editLocation"></div>
+    </div>
+    <div class="field-row two">
       <div class="field"><label>Organization</label><input id="editOrg"></div>
       <div class="field"><label>Designation</label><input id="editDesignation"></div>
     </div>
     <div class="field-row two">
-      <div class="field"><label>Location</label><input id="editLocation"></div>
       <div class="field"><label>Mobile Phone</label><input id="editMobile"></div>
+      <div class="field"><label>Email</label><input id="editEmail" type="email"></div>
     </div>
-    <div class="field"><label>Email</label><input id="editEmail" type="email"></div>
+    <div class="field-row two">
+      <div class="field"><label>LinkedIn</label><input id="editLinkedin"></div>
+      <div class="field"><label>Facebook</label><input id="editFacebook"></div>
+    </div>
+    <div class="field"><label>Permanent Address</label><textarea id="editPermanentAddress" rows="2"></textarea></div>
     <div style="display:flex; justify-content:space-between; margin-top:8px; gap:10px;">
       <button class="btn btn-ghost" style="border-color:#B23A3A; color:#B23A3A;" onclick="deleteMember()">Delete Member</button>
       <div style="display:flex; gap:8px;">
@@ -1397,6 +1411,11 @@ document.getElementById('photoInput').addEventListener('change', function(e){
 
 document.getElementById('alumniForm').addEventListener('submit', async function(e){
   e.preventDefault();
+
+  const programmes = [...document.querySelectorAll('.fProgrammeChk:checked')].map(c=>c.value);
+  document.getElementById('fProgrammeError').style.display = programmes.length ? 'none' : 'block';
+  if(!programmes.length){ return; }
+
   const submitBtn = this.querySelector('button[type="submit"]');
   submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
 
@@ -1412,19 +1431,12 @@ document.getElementById('alumniForm').addEventListener('submit', async function(
     gender: document.getElementById('fGender').value,
     date_of_birth: document.getElementById('fDob').value || null,
     blood_group: document.getElementById('fBloodGroup').value,
-    religion: document.getElementById('fReligion').value.trim(),
-    nid: document.getElementById('fNid').value.trim(),
-    nationality: document.getElementById('fNationality').value.trim(),
-    marital_status: document.getElementById('fMaritalStatus').value,
-    mailing_address: document.getElementById('fMailingAddress').value.trim(),
     permanent_address: document.getElementById('fPermanentAddress').value.trim(),
     email: document.getElementById('fEmail').value.trim(),
-    land_phone: document.getElementById('fLandPhone').value.trim(),
     mobile_phone: document.getElementById('fMobilePhone').value.trim(),
-    website: document.getElementById('fWebsite').value.trim(),
     linkedin: document.getElementById('fLinkedin').value.trim(),
     facebook: document.getElementById('fFacebook').value.trim(),
-    programme: document.getElementById('fProgramme').value,
+    programme: programmes.join(', '),
     student_id: document.getElementById('fStudentId').value.trim(),
     passing_year: parseInt(document.getElementById('fPassingYear').value) || null,
     organization: document.getElementById('fOrganization').value.trim(),
@@ -1490,6 +1502,14 @@ function openEditModal(id){
   document.getElementById('editLocation').value = a.location||'';
   document.getElementById('editMobile').value = a.mobile || '';
   document.getElementById('editEmail').value = a.email||'';
+  document.getElementById('editFatherName').value = a.fatherName || '';
+  document.getElementById('editMotherName').value = a.motherName || '';
+  document.getElementById('editGender').value = a.gender || '';
+  document.getElementById('editDob').value = a.dob || '';
+  document.getElementById('editBloodGroup').value = a.bloodGroup || '';
+  document.getElementById('editLinkedin').value = a.linkedin || '';
+  document.getElementById('editFacebook').value = a.facebook || '';
+  document.getElementById('editPermanentAddress').value = a.permanentAddress || '';
   document.getElementById('editModalBg').style.display = 'flex';
 }
 function closeEditModal(){
@@ -1509,12 +1529,22 @@ async function saveMemberEdit(){
   const location = document.getElementById('editLocation').value;
   const mobile = document.getElementById('editMobile').value;
   const email = document.getElementById('editEmail').value;
+  const linkedin = document.getElementById('editLinkedin').value;
+  const facebook = document.getElementById('editFacebook').value;
+  const fatherName = document.getElementById('editFatherName').value;
+  const motherName = document.getElementById('editMotherName').value;
+  const gender = document.getElementById('editGender').value;
+  const dob = document.getElementById('editDob').value || null;
+  const bloodGroup = document.getElementById('editBloodGroup').value;
+  const permanentAddress = document.getElementById('editPermanentAddress').value;
 
   const { error:e1 } = await sb.from('members').update({
-    full_name:name, passing_year:batch, programme:degree, organization:org, designation, location, email
+    full_name:name, passing_year:batch, programme:degree, organization:org, designation, location, email, linkedin, facebook
   }).eq('id', editingMemberId);
   const { error:e2 } = await sb.from('member_private_details').upsert({
-    member_id:editingMemberId, student_id:studentId, mobile_phone:mobile
+    member_id:editingMemberId, student_id:studentId, mobile_phone:mobile,
+    father_name:fatherName, mother_name:motherName, gender, date_of_birth:dob,
+    blood_group:bloodGroup, permanent_address:permanentAddress
   });
   if(e1 || e2){ alert('Could not save: ' + (e1?.message || e2?.message)); return; }
 
@@ -1533,9 +1563,11 @@ async function deleteMember(){
 
 function downloadMembersExcel(){
   const rows = alumniStaff.map(a=>({
-    Name:a.name, Batch:a.batch, Programme:a.degree, "Student ID":a.studentId||'', Organization:a.org||'',
-    Designation:a.designation||'', Location:a.location, Email:a.email, Mobile:a.mobile||'',
-    LinkedIn:a.linkedin||'', Facebook:a.facebook||''
+    Name:a.name, "Father's Name":a.fatherName||'', "Mother's Name":a.motherName||'', Gender:a.gender||'',
+    "Date of Birth":a.dob||'', "Blood Group":a.bloodGroup||'',
+    Batch:a.batch, Programme:a.degree, "Student ID":a.studentId||'', Organization:a.org||'',
+    Designation:a.designation||'', Location:a.location, "Permanent Address":a.permanentAddress||'',
+    Email:a.email, Mobile:a.mobile||'', LinkedIn:a.linkedin||'', Facebook:a.facebook||''
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
