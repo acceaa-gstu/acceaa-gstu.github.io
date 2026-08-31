@@ -72,7 +72,7 @@
   .cta-banner .btn-primary:hover{background:var(--brass-soft);}
 
   .ach-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px;}
-  .ach-card{background:var(--paper-2); border:1px solid var(--line); border-radius:12px; overflow:hidden; transition:.15s;}
+  .ach-card{background:var(--paper-2); border:1px solid var(--line); border-radius:12px; overflow:hidden; transition:.15s; cursor:pointer;}
   .ach-card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(20,33,61,.12);}
   .ach-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--ink-2),var(--ink)); background-size:cover; background-position:center;
     position:relative; display:flex; align-items:center; justify-content:center;}
@@ -993,6 +993,7 @@ let staffList = [];
 let editingMemberId = null;
 let editingCommitteeId = null;
 let currentDetailEvent = null;
+let currentDetailAchievement = null;
 
 function mapMember(m){
   const role = m.designation ? (m.organization ? `${m.designation}, ${m.organization}` : m.designation) : (m.organization || '');
@@ -1242,15 +1243,30 @@ function formatEventDate(dateStr){
 function openEventDetail(id){
   const e = events.find(x=>x.id===id);
   if(!e) return;
-  currentDetailEvent = e;
+  currentDetailEvent = e; currentDetailAchievement = null;
   document.getElementById('edKind').textContent = e.kind;
   document.getElementById('edTitle').textContent = e.title;
+  document.getElementById('edDate').style.display = 'block';
   document.getElementById('edDate').textContent = formatEventDate(e.date);
   const photoEl = document.getElementById('edPhoto');
   if(e.photo){ photoEl.style.display = 'block'; photoEl.style.backgroundImage = `url('${e.photo}')`; }
   else { photoEl.style.display = 'none'; }
   document.getElementById('edDesc').textContent = e.desc;
   history.pushState(null, '', '#event-' + id);
+  switchTab('eventDetail');
+}
+function openAchievementDetail(id){
+  const a = achievementsFull.find(x=>x.id===id);
+  if(!a) return;
+  currentDetailAchievement = a; currentDetailEvent = null;
+  document.getElementById('edKind').textContent = a.tag;
+  document.getElementById('edTitle').textContent = `${a.name} · Batch ${a.batch||'—'}`;
+  document.getElementById('edDate').style.display = 'none';
+  const photoEl = document.getElementById('edPhoto');
+  if(a.photo){ photoEl.style.display = 'block'; photoEl.style.backgroundImage = `url('${a.photo}')`; }
+  else { photoEl.style.display = 'none'; }
+  document.getElementById('edDesc').textContent = a.text;
+  history.pushState(null, '', '#achievement-' + id);
   switchTab('eventDetail');
 }
 function closeEventDetail(){
@@ -1271,9 +1287,14 @@ async function shareLink(url, title, text){
   }
 }
 function shareEvent(){
-  if(!currentDetailEvent) return;
-  const url = location.origin + location.pathname + '#event-' + currentDetailEvent.id;
-  shareLink(url, currentDetailEvent.title, currentDetailEvent.desc.slice(0,150));
+  if(currentDetailEvent){
+    const url = location.origin + location.pathname + '#event-' + currentDetailEvent.id;
+    shareLink(url, currentDetailEvent.title, currentDetailEvent.desc.slice(0,150));
+  } else if(currentDetailAchievement){
+    const a = currentDetailAchievement;
+    const url = location.origin + location.pathname + '#achievement-' + a.id;
+    shareLink(url, `${a.name} · Batch ${a.batch||'—'}`, a.text.slice(0,150));
+  }
 }
 function shareEventById(id, evt){
   if(evt){ evt.stopPropagation(); }
@@ -1281,6 +1302,13 @@ function shareEventById(id, evt){
   if(!e) return;
   const url = location.origin + location.pathname + '#event-' + id;
   shareLink(url, e.title, e.desc.slice(0,150));
+}
+function shareAchievementById(id, evt){
+  if(evt){ evt.stopPropagation(); }
+  const a = achievementsFull.find(x=>x.id===id);
+  if(!a) return;
+  const url = location.origin + location.pathname + '#achievement-' + id;
+  shareLink(url, `${a.name} · Batch ${a.batch||'—'}`, a.text.slice(0,150));
 }
 function shareNotice(id, evt){
   if(evt){ evt.stopPropagation(); }
@@ -1295,6 +1323,9 @@ function handleDeepLink(){
   if(hash.startsWith('#event-')){
     const id = hash.slice(7);
     if(events.find(x=>x.id===id)) openEventDetail(id);
+  } else if(hash.startsWith('#achievement-')){
+    const id = hash.slice(13);
+    if(achievementsFull.find(x=>x.id===id)) openAchievementDetail(id);
   } else if(hash.startsWith('#notice-')){
     const id = hash.slice(8);
     switchTab('members');
@@ -1350,8 +1381,11 @@ function achCardHTML(a){
   const photoStyle = a.photo ? ` style="background-image:url('${a.photo}')"` : '';
   const defaultMark = a.photo ? '' : `<div class="ach-default-logo">${defaultAvatarIcon(30)}</div>`;
   return `
-    <div class="ach-card">
-      <div class="ach-photo"${photoStyle}><span class="ach-tag-badge">${a.tag}</span>${defaultMark}</div>
+    <div class="ach-card" onclick="openAchievementDetail('${a.id}')">
+      <div class="ach-photo"${photoStyle}>
+        <span class="ach-tag-badge">${a.tag}</span>${defaultMark}
+        <button class="share-icon-btn" title="Share" onclick="shareAchievementById('${a.id}', event)">&#8683;</button>
+      </div>
       <div class="ach-body"><h3>${a.name} · Batch ${a.batch}</h3><p>${a.text}</p></div>
     </div>`;
 }
