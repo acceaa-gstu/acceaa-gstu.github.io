@@ -382,7 +382,7 @@
       <div class="welcome-body">
         <span class="eyebrow">Dept. of Applied Chemistry & Chemical Engineering, GSTU</span>
         <h1>Welcome to ACCE Alumni Association</h1>
-        <p>We're proud to bring together every graduate of the Department of Applied Chemistry and Chemical Engineering under one association — built on mentorship, friendship, and a shared commitment to every ACCEian's growth.</p>
+        <p>We're proud to bring together every graduate of the Department of Applied Chemistry and Chemical Engineering under one association, built on mentorship, connection, and a shared commitment to every ACCEian's growth.</p>
         <div class="welcome-actions">
           <button class="btn btn-primary" onclick="switchTab('members')">Become a Member</button>
           <button class="btn btn-ghost" onclick="switchTab('about')">Learn More</button>
@@ -437,12 +437,12 @@
     <div class="about-hero">
       <span class="eyebrow">Founding Charter · GSTU</span>
       <h1>About the Association</h1>
-      <p class="lead">A non-political, non-profit, voluntary organization uniting every graduate of the Department of Applied Chemistry and Chemical Engineering — built on friendship, mentorship, and a shared responsibility to the Department's future.</p>
+      <p class="lead">A non-political, non-profit, voluntary organization uniting every graduate of the Department of Applied Chemistry and Chemical Engineering, built on mentorship, connection, and a shared responsibility to the Department's future.</p>
       <div class="about-stats">
-        <div class="about-stat"><div class="num">2024</div><div class="lbl">Founded</div></div>
-        <div class="about-stat"><div class="num">06</div><div class="lbl">Core Objectives</div></div>
-        <div class="about-stat"><div class="num">09</div><div class="lbl">Executive Roles</div></div>
-        <div class="about-stat"><div class="num">03</div><div class="lbl">Membership Tiers</div></div>
+        <div class="about-stat"><div class="num">2026</div><div class="lbl">Founded</div></div>
+        <div class="about-stat"><div class="num" id="statObjectives">06</div><div class="lbl">Core Objectives</div></div>
+        <div class="about-stat"><div class="num" id="statExecRoles">—</div><div class="lbl">Executive Roles</div></div>
+        <div class="about-stat"><div class="num" id="statTotalMembers">—</div><div class="lbl">Total Members</div></div>
       </div>
       <div class="pill-row"><span class="pill">Non-political</span><span class="pill">Non-profit</span><span class="pill">Voluntary</span></div>
     </div>
@@ -451,7 +451,7 @@
       <div class="dossier-num">01</div>
       <div class="dossier-content">
         <h3>About the Association</h3>
-        <p>The Applied Chemistry and Chemical Engineering Alumni Association, GSTU (ACCEAA, GSTU) is a non-political, non-profit, and voluntary organization composed of individuals who have completed graduation from the Department of Applied Chemistry and Chemical Engineering (ACCE), Gopalganj Science and Technology University (GSTU). It was formally adopted by its founding members at a General Assembly, with the shared purpose of building a lasting bond of friendship and cooperation among graduates, accelerating the professional development of its members, and contributing meaningfully to the advancement of the Department and the University.</p>
+        <p>The Applied Chemistry and Chemical Engineering Alumni Association, GSTU (ACCEAA, GSTU) is a non-political, non-profit, voluntary organization for everyone who has graduated from the Department of Applied Chemistry and Chemical Engineering (ACCE), Gopalganj Science and Technology University (GSTU). It was formally adopted by its founding members at a General Assembly. Our shared purpose is simple: connect graduates with each other, offer mentorship and guidance to current students, and support the continued growth of the Department and the University.</p>
       </div>
     </div>
 
@@ -1082,6 +1082,12 @@ function goToAchievementsHistory(){
 }
 
 function initials(name){return name.split(' ').map(n=>n[0]).join('').slice(0,2);}
+function defaultAvatarIcon(size){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" style="opacity:.85;">
+    <circle cx="32" cy="23" r="12"/>
+    <path d="M6 61c2-19 14-28 26-28s24 9 26 28"/>
+  </svg>`;
+}
 
 function renderLedgerFilters(){
   const batchFilter = document.getElementById('batchFilter');
@@ -1095,6 +1101,7 @@ function renderLedgerFilters(){
 }
 
 function renderGrid(){
+  document.getElementById('statTotalMembers').textContent = String(alumniPublic.length).padStart(2,'0');
   const q = document.getElementById('searchBox').value.toLowerCase();
   const batch = document.getElementById('batchFilter').value;
   const degree = document.getElementById('degreeFilter').value;
@@ -1103,7 +1110,7 @@ function renderGrid(){
   const grid = document.getElementById('cardGrid');
   grid.innerHTML = filtered.map(a=>`
     <div class="card" onclick="openModal('${a.id}')">
-      <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':initials(a.name)}</div>
+      <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':defaultAvatarIcon(40)}</div>
       <div class="card-body"><h3>${a.name}</h3><div class="role">${a.role||''}</div>
       <div class="tags"><span class="tag">${a.batch||''}</span><span class="tag">${a.degree||''}</span><span class="tag">${(a.location||'').split(', ')[1]||a.location||''}</span></div></div>
     </div>`).join('') || `<div style="padding:40px;text-align:center;color:var(--muted);">No matches yet.</div>`;
@@ -1130,7 +1137,7 @@ function execCardHTML(e){
   const photoStyle = e.photo ? ` style="background-image:url('${e.photo}')"` : '';
   return `
     <div class="exec-card">
-      <div class="exec-photo"${photoStyle}>${e.photo ? '' : initials(e.name)}</div>
+      <div class="exec-photo"${photoStyle}>${e.photo ? '' : defaultAvatarIcon(52)}</div>
       <div class="exec-info">
         <h3>${e.name}</h3>
         <div class="exec-role">${e.role}</div>
@@ -1148,6 +1155,7 @@ function execCardHTML(e){
 function renderExec(){
   document.getElementById('execGrid').innerHTML = execCommittee.map(execCardHTML).join('');
   document.getElementById('execGridHome').innerHTML = execCommittee.slice(0,4).map(execCardHTML).join('');
+  document.getElementById('statExecRoles').textContent = String(execCommittee.length).padStart(2,'0');
 }
 
 function eventCardHTML(e){
@@ -1213,7 +1221,7 @@ function renderAdminEventList(){
 
 function achCardHTML(a){
   const photoStyle = a.photo ? ` style="background-image:url('${a.photo}')"` : '';
-  const defaultMark = a.photo ? '' : `<div class="ach-default-logo">${initials(a.name)}</div>`;
+  const defaultMark = a.photo ? '' : `<div class="ach-default-logo">${defaultAvatarIcon(30)}</div>`;
   return `
     <div class="ach-card">
       <div class="ach-photo"${photoStyle}><span class="ach-tag-badge">${a.tag}</span>${defaultMark}</div>
@@ -1354,15 +1362,16 @@ function downloadMembershipForm(){
 
 function renderObjectives(){
   const objectives = [
-    "Create and maintain lasting bonds of friendship and cooperation among alumni, current students, and faculty of the Department.",
+    "Build lasting connections and cooperation among alumni, current students, and faculty of the Department.",
     "Encourage professional networking, mentorship, and career support among members.",
     "Support the academic and infrastructural development of the Department through cooperation, resource mobilization, and consultation with University authorities.",
     "Support current students through scholarships, career counselling, internships, and job opportunities.",
-    "Strengthen fraternity among members by organizing reunions, seminars, workshops, and social/cultural events.",
+    "Strengthen connections among members by organizing reunions, seminars, workshops, and social and cultural events.",
     "Recognize and celebrate the achievements of alumni and maintain a public record of their contributions.",
   ];
   document.getElementById('objList').innerHTML = objectives.map((o,i)=>`
     <div class="obj-item"><div class="obj-num">${String(i+1).padStart(2,'0')}</div><p>${o}</p></div>`).join('');
+  document.getElementById('statObjectives').textContent = String(objectives.length).padStart(2,'0');
 }
 
 const feeMini = [
