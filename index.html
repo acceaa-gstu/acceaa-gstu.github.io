@@ -218,10 +218,16 @@
   .event-date-badge{position:absolute; top:12px; left:12px; background:var(--ink); color:#fff; border-radius:6px; padding:6px 10px; text-align:center;}
   .event-date-badge .d{font-family:'Fraunces',serif; font-size:17px; line-height:1;}
   .event-date-badge .m{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase;}
+  .event-card{cursor:pointer;}
   .event-body{padding:18px;}
   .event-body h3{font-size:16px; margin-bottom:8px;}
   .event-body p{color:var(--muted); font-size:13.5px; line-height:1.6; margin:0;}
   .kind-tag{font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; color:var(--brass); margin-left:8px;}
+  .share-icon-btn{position:absolute; top:10px; right:10px; z-index:2; width:30px; height:30px; border-radius:50%;
+    background:rgba(20,33,61,.65); color:#fff; border:none; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:14px; transition:.15s;}
+  .share-icon-btn:hover{background:var(--ink);}
+  .news-card{position:relative; cursor:pointer;}
 
   /* ---------- FORM ---------- */
   .form-wrap{max-width:580px;}
@@ -564,6 +570,22 @@
       <button class="chip" data-kind="achievement">Achievements</button>
     </div>
     <div class="event-grid" id="eventList"></div>
+  </section>
+
+  <!-- EVENT / NEWS READING PAGE -->
+  <section id="eventDetail">
+    <button class="btn btn-ghost btn-sm" onclick="closeEventDetail()">&larr; Back to Events &amp; News</button>
+    <div style="margin-top:22px; max-width:740px;">
+      <span class="kind-tag" id="edKind" style="margin-left:0; font-size:11px;"></span>
+      <h1 id="edTitle" style="font-size:28px; line-height:1.25; margin:12px 0 8px;"></h1>
+      <div id="edDate" style="color:var(--muted); font-size:13px; margin-bottom:22px; font-family:'IBM Plex Mono',monospace;"></div>
+      <div id="edPhoto" style="width:100%; aspect-ratio:16/9; border-radius:10px; background-size:cover; background-position:center; margin-bottom:26px; display:none;"></div>
+      <p id="edDesc" style="font-size:15.5px; line-height:1.8; color:var(--ink-2); white-space:pre-wrap;"></p>
+      <div style="margin-top:30px; display:flex; gap:10px;">
+        <button class="btn btn-primary btn-sm" onclick="shareEvent()">Share</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeEventDetail()">Back to Events &amp; News</button>
+      </div>
+    </div>
   </section>
 
   <!-- SUBMIT -->
@@ -970,6 +992,7 @@ let currentUser = null;    // { id, username, displayName, role }
 let staffList = [];
 let editingMemberId = null;
 let editingCommitteeId = null;
+let currentDetailEvent = null;
 
 function mapMember(m){
   const role = m.designation ? (m.organization ? `${m.designation}, ${m.organization}` : m.designation) : (m.organization || '');
@@ -1061,6 +1084,7 @@ async function loadPublicData(){
   renderLedgerFilters(); renderGrid(); renderExec(); renderEvents('all'); renderHomeNews();
   renderAchievements(); renderPartners(); renderNotices();
   loadAndRenderArchivedCommittees();
+  handleDeepLink();
 }
 
 const faqs = [
@@ -1178,9 +1202,14 @@ function renderExec(){
 }
 
 function eventCardHTML(e){
+  const photoStyle = e.photo ? ` style="background-image:url('${e.photo}')"` : '';
   return `
-    <div class="event-card">
-      <div class="event-photo"><div class="event-date-badge"><div class="d">${e.day}</div><div class="m">${e.mon}</div></div>photo placeholder</div>
+    <div class="event-card" onclick="openEventDetail('${e.id}')">
+      <div class="event-photo"${photoStyle}>
+        <div class="event-date-badge"><div class="d">${e.day}</div><div class="m">${e.mon}</div></div>
+        ${e.photo ? '' : 'photo placeholder'}
+        <button class="share-icon-btn" title="Share" onclick="shareEventById('${e.id}', event)">&#8683;</button>
+      </div>
       <div class="event-body"><h3>${e.title}<span class="kind-tag">${e.kind}</span></h3><p>${e.desc}</p></div>
     </div>`;
 }
@@ -1204,9 +1233,88 @@ document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click', ()=>{
   renderEvents(c.dataset.kind);
 }));
 
+function formatEventDate(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+}
+
+function openEventDetail(id){
+  const e = events.find(x=>x.id===id);
+  if(!e) return;
+  currentDetailEvent = e;
+  document.getElementById('edKind').textContent = e.kind;
+  document.getElementById('edTitle').textContent = e.title;
+  document.getElementById('edDate').textContent = formatEventDate(e.date);
+  const photoEl = document.getElementById('edPhoto');
+  if(e.photo){ photoEl.style.display = 'block'; photoEl.style.backgroundImage = `url('${e.photo}')`; }
+  else { photoEl.style.display = 'none'; }
+  document.getElementById('edDesc').textContent = e.desc;
+  history.pushState(null, '', '#event-' + id);
+  switchTab('eventDetail');
+}
+function closeEventDetail(){
+  history.pushState(null, '', location.pathname + location.search);
+  switchTab('events');
+}
+
+async function shareLink(url, title, text){
+  if(navigator.share){
+    try{ await navigator.share({ title, text, url }); } catch(e){ /* user cancelled */ }
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    alert('Link copied to clipboard:\n' + url);
+  } catch(e){
+    prompt('Copy this link to share:', url);
+  }
+}
+function shareEvent(){
+  if(!currentDetailEvent) return;
+  const url = location.origin + location.pathname + '#event-' + currentDetailEvent.id;
+  shareLink(url, currentDetailEvent.title, currentDetailEvent.desc.slice(0,150));
+}
+function shareEventById(id, evt){
+  if(evt){ evt.stopPropagation(); }
+  const e = events.find(x=>x.id===id);
+  if(!e) return;
+  const url = location.origin + location.pathname + '#event-' + id;
+  shareLink(url, e.title, e.desc.slice(0,150));
+}
+function shareNotice(id, evt){
+  if(evt){ evt.stopPropagation(); }
+  const n = notices.find(x=>x.id===id);
+  if(!n) return;
+  const url = location.origin + location.pathname + '#notice-' + id;
+  shareLink(url, n.title, n.desc);
+}
+
+function handleDeepLink(){
+  const hash = location.hash;
+  if(hash.startsWith('#event-')){
+    const id = hash.slice(7);
+    if(events.find(x=>x.id===id)) openEventDetail(id);
+  } else if(hash.startsWith('#notice-')){
+    const id = hash.slice(8);
+    switchTab('members');
+    setTimeout(()=>{
+      const el = document.getElementById('notice-'+id);
+      if(el){
+        el.scrollIntoView({ behavior:'smooth', block:'center' });
+        el.style.outline = '2px solid var(--brass)';
+        setTimeout(()=>{ el.style.outline = ''; }, 2500);
+      }
+    }, 300);
+  }
+}
+
 function renderHomeNews(){
   document.getElementById('homeNewsStrip').innerHTML = events.slice(0,3).map(e=>`
-    <div class="news-card"><div class="news-photo"${e.photo?` style="background-image:url('${e.photo}');background-size:cover;background-position:center;"`:''}>${e.photo?'':'photo placeholder'}</div>
+    <div class="news-card" onclick="openEventDetail('${e.id}')">
+      <div class="news-photo"${e.photo?` style="background-image:url('${e.photo}');background-size:cover;background-position:center;"`:''}>${e.photo?'':'photo placeholder'}
+        <button class="share-icon-btn" title="Share" onclick="shareEventById('${e.id}', event)">&#8683;</button>
+      </div>
     <div class="news-body"><span class="news-tag">${e.kind}</span><h3>${e.title}</h3><p>${e.desc.slice(0,80)}…</p></div></div>`).join('');
 }
 
@@ -1311,10 +1419,13 @@ function renderNotices(){
   const el = document.getElementById('noticeList');
   if(!notices.length){ el.innerHTML = `<div class="notice-empty">No notices published yet.</div>`; return; }
   el.innerHTML = notices.map(n=>`
-    <div class="notice-card">
+    <div class="notice-card" id="notice-${n.id}">
       <div class="notice-icon">📄</div>
       <div class="notice-body"><h4>${n.title}</h4><p>${n.desc}</p></div>
-      ${n.fileUrl ? `<a class="btn btn-ghost btn-sm" href="${n.fileUrl}" target="_blank">Download PDF</a>` : `<span style="font-size:11.5px;color:var(--muted);">PDF pending upload</span>`}
+      <div style="display:flex; gap:6px; flex:0 0 auto;">
+        ${n.fileUrl ? `<a class="btn btn-ghost btn-sm" href="${n.fileUrl}" target="_blank">Download PDF</a>` : `<span style="font-size:11.5px;color:var(--muted);">PDF pending upload</span>`}
+        <button class="btn btn-ghost btn-sm" title="Share" onclick="shareNotice('${n.id}', event)">Share</button>
+      </div>
     </div>`).join('');
 }
 function renderAdminNoticeList(){
