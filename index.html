@@ -149,9 +149,13 @@
   .dossier-num{font-family:'Fraunces',serif; font-size:36px; color:var(--brass); line-height:1;}
   .dossier-content h3{font-size:18px; color:var(--ink-2); margin-bottom:14px;}
   .dossier-content p{color:var(--muted); font-size:14px; max-width:700px;}
-  .obj-item{display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);}
-  .obj-num{font-family:'IBM Plex Mono',monospace; color:var(--brass); font-weight:500; flex:0 0 28px;}
-  .obj-item p{margin:0; font-size:13.5px; color:var(--ink-2); max-width:none;}
+  .obj-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:16px;}
+  .obj-card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; padding:22px 24px 24px 26px; position:relative; overflow:hidden; transition:.15s;}
+  .obj-card::before{content:""; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--brass);}
+  .obj-card:hover{box-shadow:0 8px 22px rgba(20,33,61,.08); transform:translateY(-2px);}
+  .obj-card h4{font-family:'Fraunces',serif; font-weight:600; font-size:16.5px; color:var(--ink-2); margin-bottom:8px;}
+  .obj-card p{margin:0; font-size:13px; color:var(--muted); line-height:1.65; max-width:none;}
+  @media(max-width:640px){ .obj-grid{grid-template-columns:1fr;} }
 
   .goal-quote{font-family:'Fraunces',serif; font-style:italic; font-size:19px; color:var(--ink-2); line-height:1.55;
     max-width:680px; border-left:3px solid var(--brass); padding-left:20px;}
@@ -440,7 +444,6 @@
   <!-- ABOUT -->
   <section id="about">
     <div class="about-hero">
-      <span class="eyebrow">Founding Charter · GSTU</span>
       <h1>About the Association</h1>
       <p class="lead">A non-political, non-profit, voluntary organization uniting every graduate of the Department of Applied Chemistry and Chemical Engineering, built on mentorship, connection, and a shared responsibility to the Department's future.</p>
       <div class="about-stats">
@@ -464,7 +467,7 @@
       <div class="dossier-num">02</div>
       <div class="dossier-content">
         <h3>Our Objective</h3>
-        <div id="objList"></div>
+        <div id="objList" class="obj-grid"></div>
       </div>
     </div>
 
@@ -1529,15 +1532,15 @@ function downloadMembershipForm(){
 
 function renderObjectives(){
   const objectives = [
-    "Build lasting connections and cooperation among alumni, current students, and faculty of the Department.",
-    "Encourage professional networking, mentorship, and career support among members.",
-    "Support the academic and infrastructural development of the Department through cooperation, resource mobilization, and consultation with University authorities.",
-    "Support current students through scholarships, career counselling, internships, and job opportunities.",
-    "Strengthen connections among members by organizing reunions, seminars, workshops, and social and cultural events.",
-    "Recognize and celebrate the achievements of alumni and maintain a public record of their contributions.",
+    { title:"Build Lasting Connections", detail:"Create and maintain bonds of connection and cooperation among alumni, current students, and faculty of the Department." },
+    { title:"Professional Networking & Mentorship", detail:"Encourage professional networking, mentorship, and career support among members." },
+    { title:"Support Departmental Development", detail:"Support the academic and infrastructural development of the Department through cooperation, resource mobilization, and consultation with University authorities." },
+    { title:"Support Current Students", detail:"Support current students through scholarships, career counselling, internships, and job opportunities." },
+    { title:"Reunions & Community Events", detail:"Strengthen connections among members by organizing reunions, seminars, workshops, and social and cultural events." },
+    { title:"Celebrate Alumni Achievements", detail:"Recognize and celebrate the achievements of alumni and maintain a public record of their contributions." },
   ];
-  document.getElementById('objList').innerHTML = objectives.map((o,i)=>`
-    <div class="obj-item"><div class="obj-num">${String(i+1).padStart(2,'0')}</div><p>${o}</p></div>`).join('');
+  document.getElementById('objList').innerHTML = objectives.map(o=>`
+    <div class="obj-card"><h4>${o.title}</h4><p>${o.detail}</p></div>`).join('');
   document.getElementById('statObjectives').textContent = String(objectives.length).padStart(2,'0');
 }
 
