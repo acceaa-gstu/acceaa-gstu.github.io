@@ -1136,6 +1136,16 @@ function goToAchievementsHistory(){
 }
 
 function initials(name){return name.split(' ').map(n=>n[0]).join('').slice(0,2);}
+// Ensures a stored social/website URL always has a protocol, so <a href="...">
+// doesn't get treated as a path relative to this site (e.g. "facebook.com/x"
+// without "https://" would otherwise open "oursite.com/facebook.com/x").
+function normalizeUrl(url){
+  if(!url) return '';
+  const trimmed = url.trim();
+  if(!trimmed) return '';
+  if(/^https?:\/\//i.test(trimmed)) return trimmed;
+  return 'https://' + trimmed;
+}
 function defaultAvatarIcon(size){
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" style="opacity:.85;">
     <circle cx="32" cy="23" r="12"/>
@@ -1170,8 +1180,8 @@ function memberCardHTML(a){
         <h3>${a.name}</h3><div class="role">${a.role||''}</div>
         <div class="tags"><span class="tag">Session ${a.batch||''}</span></div>
         <div class="card-social" onclick="event.stopPropagation()">
-          ${a.linkedin ? `<a class="soc-btn soc-li" href="${a.linkedin}" target="_blank" title="LinkedIn">in</a>` : ''}
-          ${a.facebook ? `<a class="soc-btn soc-fb" href="${a.facebook}" target="_blank" title="Facebook">f</a>` : ''}
+          ${a.linkedin ? `<a class="soc-btn soc-li" href="${normalizeUrl(a.linkedin)}" target="_blank" title="LinkedIn">in</a>` : ''}
+          ${a.facebook ? `<a class="soc-btn soc-fb" href="${normalizeUrl(a.facebook)}" target="_blank" title="Facebook">f</a>` : ''}
           ${a.email ? `<a class="soc-btn soc-em" href="mailto:${a.email}" title="Email">@</a>` : ''}
         </div>
       </div>
@@ -1228,7 +1238,7 @@ function closeModal(){document.getElementById('modalBg').style.display='none';}
 document.getElementById('modalBg').addEventListener('click', e=>{if(e.target.id==='modalBg') closeModal();});
 
 function execCardHTML(e){
-  const profileUrl = e.linkedin || e.facebook || '#';
+  const profileUrl = normalizeUrl(e.linkedin) || normalizeUrl(e.facebook) || '#';
   const photoStyle = e.photo ? ` style="background-image:url('${e.photo}')"` : '';
   return `
     <div class="exec-card">
@@ -1238,8 +1248,8 @@ function execCardHTML(e){
         <div class="exec-role">${e.role}</div>
         <div class="exec-batch">Session ${e.batch}</div>
         <div class="exec-social">
-          ${e.linkedin ? `<a class="soc-btn soc-li" href="${e.linkedin}" target="_blank" title="LinkedIn">in</a>` : ''}
-          ${e.facebook ? `<a class="soc-btn soc-fb" href="${e.facebook}" target="_blank" title="Facebook">f</a>` : ''}
+          ${e.linkedin ? `<a class="soc-btn soc-li" href="${normalizeUrl(e.linkedin)}" target="_blank" title="LinkedIn">in</a>` : ''}
+          ${e.facebook ? `<a class="soc-btn soc-fb" href="${normalizeUrl(e.facebook)}" target="_blank" title="Facebook">f</a>` : ''}
           <a class="soc-btn soc-em" href="mailto:${e.email}" title="Email">@</a>
           <a class="soc-btn soc-ph" href="tel:${e.phone}" title="Phone">☎</a>
         </div>
