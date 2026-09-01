@@ -73,8 +73,9 @@
   .cta-banner .btn-primary:hover{background:var(--brass-soft);}
 
   .ach-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px;}
-  .ach-card{background:var(--paper-2); border:1px solid var(--line); border-radius:12px; overflow:hidden; transition:.15s; cursor:pointer;}
-  .ach-card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(20,33,61,.12);}
+  .ach-card{background:var(--paper-2); border:1px solid var(--line); border-radius:14px; overflow:hidden; transition:.2s; cursor:pointer;
+    box-shadow:0 2px 8px rgba(20,33,61,.05);}
+  .ach-card:hover{transform:translateY(-4px); box-shadow:0 16px 32px rgba(20,33,61,.14); border-color:var(--brass);}
   .ach-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--ink-2),var(--ink)); background-size:cover; background-position:center;
     position:relative; display:flex; align-items:center; justify-content:center;}
   .ach-photo::before{content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(20,33,61,.55), rgba(20,33,61,.1) 65%);}
@@ -214,21 +215,27 @@
   .card-social{display:flex; gap:8px; margin-top:12px;}
 
   /* ---------- EVENTS ---------- */
-  .filter-row{display:flex; gap:8px; margin:16px 0 22px;}
+  .filter-row{display:flex; gap:8px; margin:16px 0 30px;}
   .chip{font-size:12.5px; font-family:'Inter',sans-serif; padding:7px 14px; border-radius:20px; border:1.5px solid var(--line); background:#fff; cursor:pointer;}
   .chip.active{background:var(--ink); color:#fff; border-color:var(--ink);}
-  .event-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px;}
-  .event-card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .ev-category{margin-bottom:52px;}
+  .ev-category:last-child{margin-bottom:0;}
+  .ev-category-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding-bottom:12px; border-bottom:2px solid var(--ink);}
+  .ev-category-count{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); background:var(--paper-2); border:1px solid var(--line); padding:4px 12px; border-radius:20px;}
+  .event-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:22px;}
+  .event-card{background:var(--paper-2); border:1px solid var(--line); border-radius:14px; overflow:hidden; cursor:pointer; transition:.2s;
+    box-shadow:0 2px 8px rgba(20,33,61,.05);}
+  .event-card:hover{transform:translateY(-4px); box-shadow:0 16px 32px rgba(20,33,61,.14); border-color:var(--brass);}
   .event-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--brass-soft),var(--brass)); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center;
     font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(20,33,61,.55); position:relative;}
-  .event-date-badge{position:absolute; top:12px; left:12px; background:var(--ink); color:#fff; border-radius:6px; padding:6px 10px; text-align:center;}
+  .event-date-badge{position:absolute; top:12px; left:12px; background:var(--ink); color:#fff; border-radius:6px; padding:6px 10px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,.2);}
   .event-date-badge .d{font-family:'Fraunces',serif; font-size:17px; line-height:1;}
   .event-date-badge .m{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase;}
-  .event-card{cursor:pointer;}
-  .event-body{padding:18px;}
-  .event-body h3{font-size:16px; margin-bottom:8px;}
-  .event-body p{color:var(--muted); font-size:13.5px; line-height:1.6; margin:0;}
-  .kind-tag{font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; color:var(--brass); margin-left:8px;}
+  .event-body{padding:20px 22px 24px;}
+  .event-body h3{font-size:16.5px; margin-bottom:10px; line-height:1.35;}
+  .event-body p{color:var(--muted); font-size:13.5px; line-height:1.65; margin:0;}
+  .kind-tag{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink);
+    background:var(--brass-soft); padding:3px 9px; border-radius:20px; margin-left:8px; font-weight:700; vertical-align:middle;}
   .share-icon-btn{position:absolute; top:10px; right:10px; z-index:2; width:30px; height:30px; border-radius:50%;
     background:rgba(20,33,61,.65); color:#fff; border:none; display:flex; align-items:center; justify-content:center;
     cursor:pointer; font-size:14px; transition:.15s;}
@@ -557,7 +564,21 @@
       <button class="chip" data-kind="news">News</button>
       <button class="chip" data-kind="achievement">Achievements</button>
     </div>
-    <div class="event-grid" id="eventList"></div>
+
+    <div class="ev-category" id="eventsSection">
+      <div class="ev-category-head"><span class="eyebrow" style="margin-bottom:0;">Events</span><span class="ev-category-count" id="eventsCount"></span></div>
+      <div class="event-grid" id="eventsOnlyList"></div>
+    </div>
+
+    <div class="ev-category" id="newsSection">
+      <div class="ev-category-head"><span class="eyebrow" style="margin-bottom:0;">News</span><span class="ev-category-count" id="newsCount"></span></div>
+      <div class="event-grid" id="newsOnlyList"></div>
+    </div>
+
+    <div class="ev-category" id="achievementsSection">
+      <div class="ev-category-head"><span class="eyebrow" style="margin-bottom:0;">Achievements</span><span class="ev-category-count" id="achievementsCount"></span></div>
+      <div class="ach-grid" id="achievementsOnlyList"></div>
+    </div>
   </section>
 
 
@@ -1337,20 +1358,33 @@ function eventCardHTML(e){
       <div class="event-body"><h3>${e.title}<span class="kind-tag">${e.kind}</span></h3><p>${truncateText(e.desc, 130)}</p></div>
     </div>`;
 }
+function emptyStateHTML(label){
+  return `<div style="padding:40px;text-align:center;color:var(--muted);grid-column:1/-1;">No ${label} yet.</div>`;
+}
 function renderEvents(kindFilter){
-  if(kindFilter==='achievement'){
-    document.getElementById('eventList').className = 'ach-grid';
-    document.getElementById('eventList').innerHTML = achievementsFull.map(achCardHTML).join('');
-    return;
+  const showEvents = kindFilter === 'all' || kindFilter === 'event';
+  const showNews = kindFilter === 'all' || kindFilter === 'news';
+  const showAch = kindFilter === 'all' || kindFilter === 'achievement';
+
+  document.getElementById('eventsSection').style.display = showEvents ? 'block' : 'none';
+  document.getElementById('newsSection').style.display = showNews ? 'block' : 'none';
+  document.getElementById('achievementsSection').style.display = showAch ? 'block' : 'none';
+
+  const evOnly = events.filter(e=>e.kind==='event');
+  const newsOnly = events.filter(e=>e.kind==='news');
+
+  if(showEvents){
+    document.getElementById('eventsOnlyList').innerHTML = evOnly.map(eventCardHTML).join('') || emptyStateHTML('events');
+    document.getElementById('eventsCount').textContent = evOnly.length;
   }
-  document.getElementById('eventList').className = 'event-grid';
-  if(kindFilter==='all'){
-    document.getElementById('eventList').innerHTML =
-      events.map(eventCardHTML).join('') + achievementsFull.map(achCardHTML).join('');
-    return;
+  if(showNews){
+    document.getElementById('newsOnlyList').innerHTML = newsOnly.map(eventCardHTML).join('') || emptyStateHTML('news posts');
+    document.getElementById('newsCount').textContent = newsOnly.length;
   }
-  const filtered = events.filter(e=>e.kind===kindFilter);
-  document.getElementById('eventList').innerHTML = filtered.map(eventCardHTML).join('');
+  if(showAch){
+    document.getElementById('achievementsOnlyList').innerHTML = achievementsFull.map(achCardHTML).join('') || emptyStateHTML('achievements');
+    document.getElementById('achievementsCount').textContent = achievementsFull.length;
+  }
 }
 document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click', ()=>{
   document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); c.classList.add('active');
