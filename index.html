@@ -952,6 +952,34 @@
   </div>
 </div>
 
+<div class="modal-bg" id="pendingDetailModalBg">
+  <div class="modal" style="max-width:560px; text-align:left; max-height:88vh; overflow-y:auto;">
+    <div class="card-photo" id="pdPhoto" style="width:100%;aspect-ratio:1/1;max-height:220px;height:auto;border-radius:8px;margin-bottom:16px;"></div>
+    <h3 id="pdName" style="margin-bottom:2px;"></h3>
+    <div class="role" id="pdType" style="margin-bottom:14px;"></div>
+    <div class="modal-row"><span>Father's Name</span><span id="pdFatherName"></span></div>
+    <div class="modal-row"><span>Mother's Name</span><span id="pdMotherName"></span></div>
+    <div class="modal-row"><span>Gender</span><span id="pdGender"></span></div>
+    <div class="modal-row"><span>Date of Birth</span><span id="pdDob"></span></div>
+    <div class="modal-row"><span>Blood Group</span><span id="pdBloodGroup"></span></div>
+    <div class="modal-row"><span>Programme</span><span id="pdProgramme"></span></div>
+    <div class="modal-row"><span>Student ID</span><span id="pdStudentId"></span></div>
+    <div class="modal-row"><span>Session</span><span id="pdSession"></span></div>
+    <div class="modal-row"><span>Organization</span><span id="pdOrganization"></span></div>
+    <div class="modal-row"><span>Designation</span><span id="pdDesignation"></span></div>
+    <div class="modal-row"><span>Permanent Address</span><span id="pdAddress"></span></div>
+    <div class="modal-row"><span>Email</span><span id="pdEmail"></span></div>
+    <div class="modal-row"><span>Mobile Phone</span><span id="pdMobile"></span></div>
+    <div class="modal-row"><span>LinkedIn</span><span id="pdLinkedin"></span></div>
+    <div class="modal-row"><span>Facebook</span><span id="pdFacebook"></span></div>
+    <div style="display:flex; gap:8px; margin-top:20px;">
+      <button class="approve-btn" style="flex:1; padding:10px;" onclick="approvePendingFromDetail()">Approve</button>
+      <button class="approve-btn" style="flex:1; padding:10px; background:#B23A3A;" onclick="rejectPendingFromDetail()">Reject</button>
+      <button class="btn btn-ghost btn-sm" onclick="closePendingDetail()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============================================================================
 // SUPABASE CLIENT
@@ -1088,8 +1116,15 @@ async function loadMembershipFees(){
 }
 async function loadPending(){
   const { data } = await sb.from('pending_submissions').select('*').order('submitted_at', { ascending:false });
-  pending = (data||[]).map(p=>({ id:p.id, name:p.full_name, batch:p.passing_year,
-    note: p.note || (p.submission_type==='update' ? 'Update submitted' : 'New submission') }));
+  pending = (data||[]).map(p=>({
+    id:p.id, name:p.full_name, batch:p.passing_year,
+    note: p.note || (p.submission_type==='update' ? 'Update submitted' : 'New submission'),
+    submissionType:p.submission_type, submittedAt:p.submitted_at, photo:p.photo_url,
+    fatherName:p.father_name, motherName:p.mother_name, gender:p.gender, dob:p.date_of_birth,
+    bloodGroup:p.blood_group, permanentAddress:p.permanent_address, email:p.email,
+    mobilePhone:p.mobile_phone, linkedin:p.linkedin, facebook:p.facebook, programme:p.programme,
+    studentId:p.student_id, organization:p.organization, designation:p.designation
+  }));
 }
 
 async function loadPublicData(){
@@ -1721,8 +1756,9 @@ function renderPending(){
   const el = document.getElementById('pendingList');
   if(!pending.length){ el.innerHTML = `<div class="notice-empty">No pending submissions.</div>`; return; }
   el.innerHTML = pending.map(p=>`
-    <div class="pend-row"><div class="pend-info"><div class="ach-photo" style="width:34px;height:34px;font-size:12px;">${initials(p.name)}</div>
-      <div><div style="font-weight:600;font-size:13.5px;">${p.name}</div><div class="pend-meta">Session ${p.batch||'—'} · ${p.note}</div></div></div>
+    <div class="pend-row"><div class="pend-info" style="cursor:pointer;" onclick="openPendingDetail('${p.id}')">
+      <div class="ach-photo" style="width:34px;height:34px;font-size:12px;">${initials(p.name)}</div>
+      <div><div style="font-weight:600;font-size:13.5px;text-decoration:underline;">${p.name}</div><div class="pend-meta">Session ${p.batch||'—'} · ${p.note}</div></div></div>
       <div style="display:flex; gap:6px;">
         <button class="approve-btn" onclick="approvePending('${p.id}', this)">Approve</button>
         <button class="approve-btn" style="background:#B23A3A;" onclick="rejectPending('${p.id}', this)">Reject</button>
@@ -1740,6 +1776,55 @@ async function rejectPending(id, btnEl){
   await sb.from('pending_submissions').delete().eq('id', id);
   btnEl.closest('.pend-row').remove();
   await loadPending();
+}
+
+let currentPendingDetailId = null;
+function openPendingDetail(id){
+  const p = pending.find(x=>x.id===id);
+  if(!p) return;
+  currentPendingDetailId = id;
+  const photoEl = document.getElementById('pdPhoto');
+  if(p.photo){ photoEl.style.backgroundImage = `url('${p.photo}')`; photoEl.innerHTML = ''; }
+  else { photoEl.style.backgroundImage = 'none'; photoEl.innerHTML = defaultAvatarMark(p.gender, '45%'); }
+  document.getElementById('pdName').textContent = p.name;
+  document.getElementById('pdType').textContent = p.submissionType === 'update' ? 'Update to an existing member' : 'New member submission';
+  document.getElementById('pdFatherName').textContent = p.fatherName || '—';
+  document.getElementById('pdMotherName').textContent = p.motherName || '—';
+  document.getElementById('pdGender').textContent = p.gender || '—';
+  document.getElementById('pdDob').textContent = p.dob || '—';
+  document.getElementById('pdBloodGroup').textContent = p.bloodGroup || '—';
+  document.getElementById('pdProgramme').textContent = p.programme || '—';
+  document.getElementById('pdStudentId').textContent = p.studentId || '—';
+  document.getElementById('pdSession').textContent = p.batch || '—';
+  document.getElementById('pdOrganization').textContent = p.organization || '—';
+  document.getElementById('pdDesignation').textContent = p.designation || '—';
+  document.getElementById('pdAddress').textContent = p.permanentAddress || '—';
+  document.getElementById('pdEmail').textContent = p.email || '—';
+  document.getElementById('pdMobile').textContent = p.mobilePhone || '—';
+  document.getElementById('pdLinkedin').textContent = p.linkedin || '—';
+  document.getElementById('pdFacebook').textContent = p.facebook || '—';
+  document.getElementById('pendingDetailModalBg').style.display = 'flex';
+}
+function closePendingDetail(){
+  document.getElementById('pendingDetailModalBg').style.display = 'none';
+  currentPendingDetailId = null;
+}
+document.getElementById('pendingDetailModalBg').addEventListener('click', e=>{ if(e.target.id==='pendingDetailModalBg') closePendingDetail(); });
+async function approvePendingFromDetail(){
+  if(!currentPendingDetailId) return;
+  const { error } = await sb.rpc('approve_pending_submission', { submission_id:currentPendingDetailId });
+  if(error){ alert('Could not approve: ' + error.message); return; }
+  closePendingDetail();
+  await Promise.all([loadPending(), loadStaffMembers(), loadPublicMembers()]);
+  renderPending(); renderMemberTable(); renderGrid(); renderLedgerFilters();
+}
+async function rejectPendingFromDetail(){
+  if(!currentPendingDetailId) return;
+  if(!confirm('Discard this submission? This cannot be undone.')) return;
+  await sb.from('pending_submissions').delete().eq('id', currentPendingDetailId);
+  closePendingDetail();
+  await loadPending();
+  renderPending();
 }
 
 function renderMemberTable(){

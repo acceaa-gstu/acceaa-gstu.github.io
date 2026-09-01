@@ -453,9 +453,9 @@ create policy "staff can update membership fees" on public.membership_fees for u
 -- only, matching the Executive Committee panel's admin-only lock.
 -- ============================================================================
 
-insert into storage.buckets (id, name, public)
-values ('photos', 'photos', true),
-       ('documents', 'documents', true)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('photos', 'photos', true, 5242880, array['image/jpeg','image/png','image/webp']),
+       ('documents', 'documents', true, 10485760, array['application/pdf'])
 on conflict (id) do nothing;
 
 -- storage.objects already has RLS enabled by default on every Supabase
