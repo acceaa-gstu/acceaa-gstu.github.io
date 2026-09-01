@@ -1057,13 +1057,24 @@ async function loadStaffMembers(){
   alumniStaff = (members||[]).map(m=>mapMemberWithPrivate(m, privMap[m.id]));
 }
 async function loadCommittee(){
+  // One request instead of two: fetch committee rows joined to their term,
+  // filtered to the current term, in a single round trip.
+  const { data, error } = await sb.from('committee')
+    .select('*, committee_terms!inner(id,label,is_current)')
+    .eq('committee_terms.is_current', true)
+    .order('sort_order');
+  if(!error && data && data.length){
+    currentTermId = data[0].committee_terms.id;
+    currentTermLabel = data[0].committee_terms.label;
+    execCommittee = data.map(c=>({ id:c.id, name:c.full_name, role:c.role, batch:c.batch,
+      linkedin:c.linkedin, facebook:c.facebook, email:c.email, phone:c.phone, photo:c.photo_url, gender:c.gender }));
+    return;
+  }
+  // Fall back (current term exists but has zero members yet, or the join failed)
   const { data: term } = await sb.from('committee_terms').select('*').eq('is_current', true).maybeSingle();
   currentTermId = term?.id || null;
   currentTermLabel = term?.label || '';
-  if(!currentTermId){ execCommittee = []; return; }
-  const { data } = await sb.from('committee').select('*').eq('term_id', currentTermId).order('sort_order');
-  execCommittee = (data||[]).map(c=>({ id:c.id, name:c.full_name, role:c.role, batch:c.batch,
-    linkedin:c.linkedin, facebook:c.facebook, email:c.email, phone:c.phone, photo:c.photo_url, gender:c.gender }));
+  execCommittee = [];
 }
 async function loadAndRenderArchivedCommittees(){
   const container = document.getElementById('archivedCommitteeList');
@@ -1129,13 +1140,23 @@ async function loadPending(){
 }
 
 async function loadPublicData(){
-  await Promise.all([
-    loadPublicMembers(), loadCommittee(), loadEvents(), loadAchievements(),
-    loadNotices(), loadPartners(), loadMembershipForm(), loadMembershipFees()
-  ]);
-  renderLedgerFilters(); renderGrid(); renderExec(); renderEvents('all'); renderHomeNews();
-  renderAchievements(); renderPartners(); renderNotices(); renderFeeHome(); renderFeeFull();
-  loadAndRenderArchivedCommittees();
+  // Each piece renders itself the moment its own data is back, instead of
+  // everything waiting on the slowest of the 8 - so Achievements/News/
+  // Committee show up immediately even if, say, Notices is slow.
+  const pMembers = loadPublicMembers().then(()=>{ renderLedgerFilters(); renderGrid(); });
+  const pCommittee = loadCommittee().then(()=>{ renderExec(); loadAndRenderArchivedCommittees(); });
+  const pEvents = loadEvents().then(renderHomeNews);
+  const pAchievements = loadAchievements().then(renderAchievements);
+  const pNotices = loadNotices().then(renderNotices);
+  const pPartners = loadPartners().then(renderPartners);
+  const pForm = loadMembershipForm();
+  const pFees = loadMembershipFees().then(()=>{ renderFeeHome(); renderFeeFull(); });
+
+  // The Events/News page's "All" tab merges events + achievements, so it
+  // needs both before it can render correctly.
+  Promise.all([pEvents, pAchievements]).then(()=>renderEvents('all'));
+
+  await Promise.all([pMembers, pCommittee, pEvents, pAchievements, pNotices, pPartners, pForm, pFees]);
   handleDeepLink();
 }
 
