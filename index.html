@@ -1193,6 +1193,11 @@ function goToAchievementsHistory(){
 }
 
 function initials(name){return name.split(' ').map(n=>n[0]).join('').slice(0,2);}
+function truncateText(text, maxLen){
+  if(!text) return '';
+  if(text.length <= maxLen) return text;
+  return text.slice(0, maxLen).trim() + '…';
+}
 // Ensures a stored social/website URL always has a protocol, so <a href="...">
 // doesn't get treated as a path relative to this site (e.g. "facebook.com/x"
 // without "https://" would otherwise open "oursite.com/facebook.com/x").
@@ -1221,7 +1226,7 @@ function renderLedgerFilters(){
   batchFilter.querySelectorAll('option:not(:first-child)').forEach(o=>o.remove());
   degreeFilter.querySelectorAll('option:not(:first-child)').forEach(o=>o.remove());
   const batches = [...new Set(alumniPublic.map(a=>a.batch).filter(Boolean))].sort((a,b)=>a-b);
-  batches.forEach(y=>batchFilter.insertAdjacentHTML('beforeend', `<option value="${y}">${y}</option>`));
+  batches.forEach(y=>batchFilter.insertAdjacentHTML('beforeend', `<option value="${y}">${formatSession(y)}</option>`));
   const degrees = [...new Set(alumniPublic.map(a=>a.degree).filter(Boolean))];
   degrees.forEach(d=>degreeFilter.insertAdjacentHTML('beforeend', `<option value="${d}">${d}</option>`));
 }
@@ -1235,7 +1240,7 @@ function memberCardHTML(a){
       <div class="card-photo"${a.photo?` style="background-image:url('${a.photo}')"`:''}>${a.photo?'':defaultAvatarMark(a.gender,'55%')}</div>
       <div class="card-body">
         <h3>${a.name}</h3><div class="role">${a.role||''}</div>
-        <div class="tags"><span class="tag">Session ${a.batch||''}</span></div>
+        <div class="tags"><span class="tag">Session ${formatSession(a.batch)}</span></div>
         <div class="card-social" onclick="event.stopPropagation()">
           ${a.linkedin ? `<a class="soc-btn soc-li" href="${normalizeUrl(a.linkedin)}" target="_blank" title="LinkedIn">in</a>` : ''}
           ${a.facebook ? `<a class="soc-btn soc-fb" href="${normalizeUrl(a.facebook)}" target="_blank" title="Facebook">f</a>` : ''}
@@ -1286,7 +1291,7 @@ function openModal(id){
   }
   document.getElementById('modalName').textContent = a.name;
   document.getElementById('modalRole').textContent = a.role||'';
-  document.getElementById('modalBatch').textContent = a.batch||'';
+  document.getElementById('modalBatch').textContent = formatSession(a.batch);
   document.getElementById('modalDegree').textContent = a.degree||'';
   document.getElementById('modalEmail').textContent = a.email||'';
   document.getElementById('modalBg').style.display = 'flex';
@@ -1303,7 +1308,7 @@ function execCardHTML(e){
       <div class="exec-info">
         <h3>${e.name}</h3>
         <div class="exec-role">${e.role}</div>
-        <div class="exec-batch">Session ${e.batch}</div>
+        <div class="exec-batch">Session ${formatSession(e.batch)}</div>
         <div class="exec-social">
           ${e.linkedin ? `<a class="soc-btn soc-li" href="${normalizeUrl(e.linkedin)}" target="_blank" title="LinkedIn">in</a>` : ''}
           ${e.facebook ? `<a class="soc-btn soc-fb" href="${normalizeUrl(e.facebook)}" target="_blank" title="Facebook">f</a>` : ''}
@@ -1329,7 +1334,7 @@ function eventCardHTML(e){
         ${e.photo ? '' : 'photo placeholder'}
         <button class="share-icon-btn" title="Share" onclick="shareEventById('${e.id}', event)">&#8683;</button>
       </div>
-      <div class="event-body"><h3>${e.title}<span class="kind-tag">${e.kind}</span></h3><p>${e.desc}</p></div>
+      <div class="event-body"><h3>${e.title}<span class="kind-tag">${e.kind}</span></h3><p>${truncateText(e.desc, 130)}</p></div>
     </div>`;
 }
 function renderEvents(kindFilter){
@@ -1359,11 +1364,20 @@ function formatEventDate(dateStr){
 }
 
 const SESSION_START_YEAR = 2012;
+// Displays a stored passing-year as an academic-year range, e.g. 2012 -> "2012-13".
+// The underlying stored/filtered value stays a plain year (2012) - only the label changes.
+function formatSession(year){
+  if(year===null || year===undefined || year==='') return '';
+  const y = parseInt(year);
+  if(isNaN(y)) return String(year);
+  const nextYY = String((y + 1) % 100).padStart(2, '0');
+  return `${y}-${nextYY}`;
+}
 function sessionYearOptionsHTML(selected){
   const currentYear = new Date().getFullYear();
   let opts = '<option value="">Select session</option>';
   for(let y=currentYear; y>=SESSION_START_YEAR; y--){
-    opts += `<option value="${y}"${String(y)===String(selected)?' selected':''}>${y}</option>`;
+    opts += `<option value="${y}"${String(y)===String(selected)?' selected':''}>${formatSession(y)}</option>`;
   }
   return opts;
 }
@@ -1392,7 +1406,7 @@ function openAchievementDetail(id){
   if(!a) return;
   currentDetailAchievement = a; currentDetailEvent = null;
   document.getElementById('edKind').textContent = a.tag;
-  document.getElementById('edTitle').textContent = `${a.name} · Session ${a.batch||'—'}`;
+  document.getElementById('edTitle').textContent = `${a.name} · Session ${a.batch?formatSession(a.batch):'—'}`;
   document.getElementById('edDate').style.display = 'none';
   const photoEl = document.getElementById('edPhoto');
   if(a.photo){ photoEl.style.display = 'block'; photoEl.style.backgroundImage = `url('${a.photo}')`; }
@@ -1427,7 +1441,7 @@ function shareEvent(){
   } else if(currentDetailAchievement){
     const a = currentDetailAchievement;
     const url = location.origin + location.pathname + '#achievement-' + a.id;
-    shareLink(url, `${a.name} · Session ${a.batch||'—'}`, a.text.slice(0,150));
+    shareLink(url, `${a.name} · Session ${a.batch?formatSession(a.batch):'—'}`, a.text.slice(0,150));
   }
 }
 function shareEventById(id, evt){
@@ -1442,7 +1456,7 @@ function shareAchievementById(id, evt){
   const a = achievementsFull.find(x=>x.id===id);
   if(!a) return;
   const url = location.origin + location.pathname + '#achievement-' + id;
-  shareLink(url, `${a.name} · Session ${a.batch||'—'}`, a.text.slice(0,150));
+  shareLink(url, `${a.name} · Session ${a.batch?formatSession(a.batch):'—'}`, a.text.slice(0,150));
 }
 function shareNotice(id, evt){
   if(evt){ evt.stopPropagation(); }
@@ -1520,7 +1534,7 @@ function achCardHTML(a){
         <span class="ach-tag-badge">${a.tag}</span>${defaultMark}
         <button class="share-icon-btn" title="Share" onclick="shareAchievementById('${a.id}', event)">&#8683;</button>
       </div>
-      <div class="ach-body"><h3>${a.name} · Session ${a.batch}</h3><p>${a.text}</p></div>
+      <div class="ach-body"><h3>${a.name} · Session ${formatSession(a.batch)}</h3><p>${truncateText(a.text, 110)}</p></div>
     </div>`;
 }
 function renderAchievements(){
@@ -1551,7 +1565,7 @@ function renderAdminAchievementList(){
   const el = document.getElementById('adminAchievementList');
   if(!achievementsFull.length){ el.innerHTML = `<div class="notice-empty">No achievements yet.</div>`; return; }
   el.innerHTML = achievementsFull.map(a=>`
-    <div class="pend-row"><div style="font-size:13px;"><strong>${a.name}</strong><div class="pend-meta">${a.tag} · Session ${a.batch||'—'}</div></div>
+    <div class="pend-row"><div style="font-size:13px;"><strong>${a.name}</strong><div class="pend-meta">${a.tag} · Session ${a.batch?formatSession(a.batch):'—'}</div></div>
       <button class="approve-btn" style="background:#B23A3A;" onclick="deleteAchievement('${a.id}')">Delete</button></div>`).join('');
 }
 
@@ -1780,7 +1794,7 @@ function renderPending(){
   el.innerHTML = pending.map(p=>`
     <div class="pend-row"><div class="pend-info" style="cursor:pointer;" onclick="openPendingDetail('${p.id}')">
       <div class="ach-photo" style="width:34px;height:34px;font-size:12px;">${initials(p.name)}</div>
-      <div><div style="font-weight:600;font-size:13.5px;text-decoration:underline;">${p.name}</div><div class="pend-meta">Session ${p.batch||'—'} · ${p.note}</div></div></div>
+      <div><div style="font-weight:600;font-size:13.5px;text-decoration:underline;">${p.name}</div><div class="pend-meta">Session ${p.batch?formatSession(p.batch):'—'} · ${p.note}</div></div></div>
       <div style="display:flex; gap:6px;">
         <button class="approve-btn" onclick="approvePending('${p.id}', this)">Approve</button>
         <button class="approve-btn" style="background:#B23A3A;" onclick="rejectPending('${p.id}', this)">Reject</button>
@@ -1817,7 +1831,7 @@ function openPendingDetail(id){
   document.getElementById('pdBloodGroup').textContent = p.bloodGroup || '—';
   document.getElementById('pdProgramme').textContent = p.programme || '—';
   document.getElementById('pdStudentId').textContent = p.studentId || '—';
-  document.getElementById('pdSession').textContent = p.batch || '—';
+  document.getElementById('pdSession').textContent = p.batch ? formatSession(p.batch) : '—';
   document.getElementById('pdOrganization').textContent = p.organization || '—';
   document.getElementById('pdDesignation').textContent = p.designation || '—';
   document.getElementById('pdAddress').textContent = p.permanentAddress || '—';
@@ -1852,7 +1866,7 @@ async function rejectPendingFromDetail(){
 function renderMemberTable(){
   const rows = alumniStaff.map(a=>`
     <tr ondblclick="openEditModal('${a.id}')">
-      <td>${a.name}</td><td>${a.batch||''}</td><td>${a.degree||''}</td><td>${a.org||'—'}</td><td>${a.designation||'—'}</td><td>${a.email||''}</td>
+      <td>${a.name}</td><td>${a.batch?formatSession(a.batch):''}</td><td>${a.degree||''}</td><td>${a.org||'—'}</td><td>${a.designation||'—'}</td><td>${a.email||''}</td>
     </tr>`).join('');
   document.getElementById('memberTable').innerHTML = `
     <thead><tr><th>Name</th><th>Session</th><th>Programme</th><th>Organization</th><th>Designation</th><th>Email</th></tr></thead>
@@ -1935,7 +1949,7 @@ function downloadMembersExcel(){
   const rows = alumniStaff.map(a=>({
     Name:a.name, "Father's Name":a.fatherName||'', "Mother's Name":a.motherName||'', Gender:a.gender||'',
     "Date of Birth":a.dob||'', "Blood Group":a.bloodGroup||'',
-    Session:a.batch, Programme:a.degree, "Student ID":a.studentId||'', Organization:a.org||'',
+    Session:formatSession(a.batch), Programme:a.degree, "Student ID":a.studentId||'', Organization:a.org||'',
     Designation:a.designation||'', Location:a.location, "Permanent Address":a.permanentAddress||'',
     Email:a.email, Mobile:a.mobile||'', LinkedIn:a.linkedin||'', Facebook:a.facebook||''
   }));
@@ -1958,7 +1972,7 @@ function downloadMembersPDF(){
     if(y > 280){ doc.addPage(); y = 16; }
     doc.setFont("helvetica","bold"); doc.text(`${i+1}. ${a.name}`, 14, y);
     doc.setFont("helvetica","normal");
-    doc.text(`Session ${a.batch||'—'} · ${a.degree||''} · ${a.designation||'—'} at ${a.org||'—'}`, 14, y+5);
+    doc.text(`Session ${a.batch?formatSession(a.batch):'—'} · ${a.degree||''} · ${a.designation||'—'} at ${a.org||'—'}`, 14, y+5);
     doc.text(`${a.email||''}${a.mobile ? '  ·  ' + a.mobile : ''}  ·  ${a.location||''}`, 14, y+10);
     y += 18;
   });
@@ -2044,7 +2058,7 @@ function renderAdminCommitteeList(){
   document.getElementById('committeeTermLabel').textContent = currentTermLabel ? `Editing: ${currentTermLabel}` : 'No current term yet — save a member to start one.';
   if(!execCommittee.length){ el.innerHTML = `<div class="notice-empty">No committee members in the current term yet.</div>`; return; }
   el.innerHTML = execCommittee.map(c=>`
-    <div class="pend-row"><div style="font-size:13px;"><strong>${c.name}</strong><div class="pend-meta">${c.role} · Session ${c.batch||'—'}</div></div>
+    <div class="pend-row"><div style="font-size:13px;"><strong>${c.name}</strong><div class="pend-meta">${c.role} · Session ${c.batch?formatSession(c.batch):'—'}</div></div>
       <div style="display:flex; gap:6px;">
         <button class="btn btn-ghost btn-sm" onclick="editCommitteeMember('${c.id}')">Edit</button>
         <button class="approve-btn" style="background:#B23A3A;" onclick="deleteCommitteeMember('${c.id}')">Delete</button>
