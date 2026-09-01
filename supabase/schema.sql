@@ -471,8 +471,14 @@ create policy "staff can upload photos and documents"
   on storage.objects for insert
   with check (
     bucket_id in ('photos','documents')
-    and public.is_staff()
-    and (bucket_id <> 'photos' or (storage.foldername(name))[1] <> 'committee' or public.is_admin())
+    and (
+      -- anyone (no login) can upload their own photo via the public Submit/Update form
+      (bucket_id = 'photos' and (storage.foldername(name))[1] = 'members')
+      or (
+        public.is_staff()
+        and (bucket_id <> 'photos' or (storage.foldername(name))[1] <> 'committee' or public.is_admin())
+      )
+    )
   );
 
 create policy "staff can update photos and documents"
