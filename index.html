@@ -111,11 +111,17 @@
 
   .notice-card{display:flex; align-items:center; gap:16px; background:var(--paper-2); border:1px solid var(--line); border-radius:8px;
     padding:16px 20px; margin-bottom:10px;}
+  .notice-main{display:flex; align-items:center; gap:16px; flex:1; min-width:0;}
+  .notice-actions{display:flex; gap:6px; flex:0 0 auto;}
   .notice-icon{width:40px; height:40px; border-radius:8px; background:var(--ink); color:var(--brass-soft); flex:0 0 40px;
     display:flex; align-items:center; justify-content:center; font-size:16px;}
   .notice-body{flex:1; min-width:0;}
   .notice-body h4{font-size:14px; margin:0 0 4px; color:var(--ink-2);}
   .notice-body p{font-size:12.5px; color:var(--muted); margin:0;}
+  @media(max-width:640px){
+    .notice-card{flex-direction:column; align-items:stretch; gap:12px; padding:14px 16px;}
+    .notice-actions{justify-content:flex-end;}
+  }
   .notice-empty{font-size:13px; color:var(--muted); padding:12px 0;}
 
   .faq-item{border-bottom:1px solid var(--line); padding:14px 0;}
@@ -191,7 +197,7 @@
   .exec-social{display:flex; gap:8px; justify-content:center; margin:14px 0 4px;}
   .soc-btn{width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;
     color:#fff; text-decoration:none; font-family:'Inter',sans-serif;}
-  .soc-li{background:#0A66C2;} .soc-fb{background:#1877F2;} .soc-em{background:var(--muted);} .soc-ph{background:var(--ok);}
+  .soc-li{background:#0A66C2;} .soc-fb{background:#1877F2;} .soc-em{background:var(--muted);} .soc-ph{background:var(--ok);} .soc-wa{background:#25D366;}
   .view-profile{margin-top:8px; width:100%; background:var(--paper); color:var(--ink); border:1px solid var(--line); font-size:12.5px; padding:9px; border-radius:6px; cursor:pointer; font-weight:600;}
   .view-profile:hover{border-color:var(--brass);}
   .archive-toggle{margin-top:32px; border-top:1.5px solid var(--ink); padding-top:16px;}
@@ -204,15 +210,16 @@
   .dir-controls input, .dir-controls select{font-family:'Inter',sans-serif; font-size:14px; padding:10px 14px; border:1.5px solid var(--line); border-radius:var(--radius); background:#fff;}
   .dir-controls input{flex:1; min-width:200px;}
   .grid-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px;}
-  .card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; overflow:hidden; cursor:pointer; transition:.15s;}
+  .card{background:var(--paper-2); border:1px solid var(--line); border-radius:10px; overflow:hidden; cursor:pointer; transition:.15s;
+    display:flex; flex-direction:column;}
   .card:hover{border-color:var(--brass); transform:translateY(-2px); box-shadow:0 6px 18px rgba(20,33,61,.08);}
   .card-photo{width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--ink-2),var(--ink)); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center;
     color:var(--brass-soft); font-family:'Fraunces',serif; font-weight:600; font-size:22px;}
-  .card-body{padding:16px;}
+  .card-body{padding:16px; display:flex; flex-direction:column; flex:1;}
   .card h3{font-size:15px;} .card .role{color:var(--muted); font-size:12.5px; margin-top:2px;}
   .tags{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
   .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; background:var(--paper); border:1px solid var(--line); padding:3px 8px; border-radius:20px; color:var(--muted);}
-  .card-social{display:flex; gap:8px; margin-top:12px;}
+  .card-social{display:flex; gap:8px; margin-top:auto; padding-top:12px;}
 
   /* ---------- EVENTS ---------- */
   .filter-row{display:flex; gap:8px; margin:16px 0 30px;}
@@ -1055,7 +1062,8 @@ function mapMember(m){
   const role = m.designation ? (m.organization ? `${m.designation}, ${m.organization}` : m.designation) : (m.organization || '');
   return { id:m.id, name:m.full_name, batch:m.passing_year, degree:m.programme, org:m.organization,
     designation:m.designation, role, location:m.location, email:m.email, linkedin:m.linkedin,
-    facebook:m.facebook, photo:m.photo_url, membershipType:m.membership_type, gender:m.gender };
+    facebook:m.facebook, photo:m.photo_url, membershipType:m.membership_type, gender:m.gender,
+    publicMobile:m.mobile_phone };
 }
 function mapMemberWithPrivate(m, p){
   return { ...mapMember(m), studentId:p?.student_id||'', mobile:p?.mobile_phone||'', landPhone:p?.land_phone||'',
@@ -1229,6 +1237,13 @@ function normalizeUrl(url){
   if(/^https?:\/\//i.test(trimmed)) return trimmed;
   return 'https://' + trimmed;
 }
+function toWhatsAppLink(phone){
+  if(!phone) return '';
+  const digits = phone.replace(/[^\d]/g, '');
+  if(!digits) return '';
+  return `https://wa.me/${digits}`;
+}
+const WHATSAPP_ICON_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.46 1.29 4.9L2 22l5.31-1.39a9.9 9.9 0 0 0 4.73 1.2h.01c5.46 0 9.9-4.45 9.9-9.9C21.95 6.45 17.5 2 12.04 2zm5.8 14.13c-.24.68-1.4 1.3-1.93 1.35-.5.05-1.02.24-3.43-.71-2.9-1.15-4.77-4.03-4.91-4.22-.14-.19-1.18-1.57-1.18-3 0-1.43.75-2.13 1.02-2.42.27-.29.58-.36.78-.36.2 0 .39 0 .56.01.18.01.42-.07.66.5.24.58.83 2 .9 2.14.07.14.12.31.02.5-.1.19-.15.31-.29.48-.14.17-.3.38-.43.51-.14.14-.29.29-.12.57.17.29.75 1.24 1.62 2.01 1.11.99 2.05 1.3 2.34 1.44.29.14.46.12.63-.07.17-.19.72-.84.92-1.13.19-.29.39-.24.65-.14.27.1 1.68.79 1.97.94.29.14.48.21.55.33.07.12.07.68-.17 1.36z"/></svg>`;
 function defaultAvatarIcon(size){
   return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" style="opacity:.85;">
     <circle cx="32" cy="23" r="12"/>
@@ -1265,6 +1280,7 @@ function memberCardHTML(a){
         <div class="card-social" onclick="event.stopPropagation()">
           ${a.linkedin ? `<a class="soc-btn soc-li" href="${normalizeUrl(a.linkedin)}" target="_blank" title="LinkedIn">in</a>` : ''}
           ${a.facebook ? `<a class="soc-btn soc-fb" href="${normalizeUrl(a.facebook)}" target="_blank" title="Facebook">f</a>` : ''}
+          ${a.publicMobile ? `<a class="soc-btn soc-wa" href="${toWhatsAppLink(a.publicMobile)}" target="_blank" title="WhatsApp">${WHATSAPP_ICON_SVG}</a>` : ''}
           ${a.email ? `<a class="soc-btn soc-em" href="mailto:${a.email}" title="Email">@</a>` : ''}
         </div>
       </div>
@@ -1636,9 +1652,11 @@ function renderNotices(){
   if(!notices.length){ el.innerHTML = `<div class="notice-empty">No notices published yet.</div>`; return; }
   el.innerHTML = notices.map(n=>`
     <div class="notice-card" id="notice-${n.id}">
-      <div class="notice-icon">📄</div>
-      <div class="notice-body"><h4>${n.title}</h4><p>${n.desc}</p></div>
-      <div style="display:flex; gap:6px; flex:0 0 auto;">
+      <div class="notice-main">
+        <div class="notice-icon">📄</div>
+        <div class="notice-body"><h4>${n.title}</h4><p>${n.desc}</p></div>
+      </div>
+      <div class="notice-actions">
         ${n.fileUrl ? `<a class="btn btn-ghost btn-sm" href="${n.fileUrl}" target="_blank">Download PDF</a>` : `<span style="font-size:11.5px;color:var(--muted);">PDF pending upload</span>`}
         <button class="btn btn-ghost btn-sm" title="Share" onclick="shareNotice('${n.id}', event)">Share</button>
       </div>
@@ -1957,7 +1975,8 @@ async function saveMemberEdit(){
   const permanentAddress = document.getElementById('editPermanentAddress').value;
 
   const { error:e1 } = await sb.from('members').update({
-    full_name:name, passing_year:batch, programme:degree, organization:org, designation, location, email, linkedin, facebook, gender
+    full_name:name, passing_year:batch, programme:degree, organization:org, designation, location, email, linkedin, facebook, gender,
+    mobile_phone:mobile
   }).eq('id', editingMemberId);
   const { error:e2 } = await sb.from('member_private_details').upsert({
     member_id:editingMemberId, student_id:studentId, mobile_phone:mobile,

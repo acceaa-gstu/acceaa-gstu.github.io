@@ -106,6 +106,7 @@ create table public.members (
   photo_url text,
   membership_type text not null default 'General' check (membership_type in ('General','Life','Honorary')),
   gender text, -- low-sensitivity, public copy of the private gender field; used only to pick a default avatar icon
+  mobile_phone text, -- public copy, shown as a WhatsApp link on the directory card
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -254,14 +255,14 @@ begin
       linkedin = s.linkedin, facebook = s.facebook, programme = s.programme,
       passing_year = s.passing_year, organization = s.organization,
       designation = s.designation, photo_url = coalesce(s.photo_url, photo_url),
-      gender = coalesce(s.gender, gender),
+      gender = coalesce(s.gender, gender), mobile_phone = coalesce(s.mobile_phone, mobile_phone),
       updated_at = now()
     where id = target_id;
   else
     insert into public.members (full_name, location, email, linkedin, facebook, programme,
-      passing_year, organization, designation, photo_url, gender)
+      passing_year, organization, designation, photo_url, gender, mobile_phone)
     values (s.full_name, s.location, s.email, s.linkedin, s.facebook, s.programme,
-      s.passing_year, s.organization, s.designation, s.photo_url, s.gender)
+      s.passing_year, s.organization, s.designation, s.photo_url, s.gender, s.mobile_phone)
     returning id into target_id;
   end if;
 
