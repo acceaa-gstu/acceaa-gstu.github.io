@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ACCEAA, GSTU — Alumni Association</title>
+<meta name="description" content="Applied Chemistry and Chemical Engineering Alumni Association, GSTU — connecting graduates, sharing achievements, and staying updated on events and news.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ACCEAA, GSTU — Alumni Association">
+<meta property="og:description" content="Applied Chemistry and Chemical Engineering Alumni Association, GSTU — connecting graduates, sharing achievements, and staying updated on events and news.">
+<meta property="og:image" content="https://acceaa-gstu.github.io/assets/logo.png">
+<meta property="og:url" content="https://acceaa-gstu.github.io/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="assets/logo.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -371,7 +378,11 @@
     .field-row{flex-direction:column; gap:0;}
     .field-row.two .field{flex-basis:100%;}
     .form-section{padding:18px;}
-    .ach-grid, .exec-grid{grid-template-columns:repeat(2, 1fr); gap:10px;}
+    .ach-grid, .exec-grid, .news-strip{grid-template-columns:repeat(2, 1fr); gap:10px;}
+    .news-photo{height:auto;}
+    .news-body{padding:10px;}
+    .news-body h3{font-size:13px; margin:6px 0 4px;}
+    .news-body p{font-size:11px;}
   }
 </style>
 </head>
@@ -1482,9 +1493,9 @@ function closeEventDetail(){
 }
 document.getElementById('eventDetailModalBg').addEventListener('click', e=>{ if(e.target.id==='eventDetailModalBg') closeEventDetail(); });
 
-async function shareLink(url, title, text){
+async function shareLink(url){
   if(navigator.share){
-    try{ await navigator.share({ title, text, url }); } catch(e){ /* user cancelled */ }
+    try{ await navigator.share({ url }); } catch(e){ /* user cancelled */ }
     return;
   }
   try{
@@ -1496,34 +1507,22 @@ async function shareLink(url, title, text){
 }
 function shareEvent(){
   if(currentDetailEvent){
-    const url = location.origin + location.pathname + '#event-' + currentDetailEvent.id;
-    shareLink(url, currentDetailEvent.title, currentDetailEvent.desc.slice(0,150));
+    shareLink(location.origin + location.pathname + '#event-' + currentDetailEvent.id);
   } else if(currentDetailAchievement){
-    const a = currentDetailAchievement;
-    const url = location.origin + location.pathname + '#achievement-' + a.id;
-    shareLink(url, `${a.name} · Session ${a.batch?formatSession(a.batch):'—'}`, a.text.slice(0,150));
+    shareLink(location.origin + location.pathname + '#achievement-' + currentDetailAchievement.id);
   }
 }
 function shareEventById(id, evt){
   if(evt){ evt.stopPropagation(); }
-  const e = events.find(x=>x.id===id);
-  if(!e) return;
-  const url = location.origin + location.pathname + '#event-' + id;
-  shareLink(url, e.title, e.desc.slice(0,150));
+  shareLink(location.origin + location.pathname + '#event-' + id);
 }
 function shareAchievementById(id, evt){
   if(evt){ evt.stopPropagation(); }
-  const a = achievementsFull.find(x=>x.id===id);
-  if(!a) return;
-  const url = location.origin + location.pathname + '#achievement-' + id;
-  shareLink(url, `${a.name} · Session ${a.batch?formatSession(a.batch):'—'}`, a.text.slice(0,150));
+  shareLink(location.origin + location.pathname + '#achievement-' + id);
 }
 function shareNotice(id, evt){
   if(evt){ evt.stopPropagation(); }
-  const n = notices.find(x=>x.id===id);
-  if(!n) return;
-  const url = location.origin + location.pathname + '#notice-' + id;
-  shareLink(url, n.title, n.desc);
+  shareLink(location.origin + location.pathname + '#notice-' + id);
 }
 
 function handleDeepLink(){
