@@ -1521,24 +1521,33 @@ async function shareLink(url){
     prompt('Copy this link to share:', url);
   }
 }
+// Shared links point at the share-preview Edge Function instead of straight
+// at the site, so WhatsApp/Facebook/etc. show that item's own title,
+// description and photo in the preview card - a static site has no server
+// to generate a per-item preview otherwise. The function immediately
+// redirects a real visitor into the correct page on the actual site; only
+// link-preview bots (which don't run JS) ever see the supabase.co URL.
+function shareUrlFor(type, id){
+  return `${SUPABASE_URL}/functions/v1/share-preview?type=${type}&id=${id}`;
+}
 function shareEvent(){
   if(currentDetailEvent){
-    shareLink(location.origin + location.pathname + '#event-' + currentDetailEvent.id);
+    shareLink(shareUrlFor('event', currentDetailEvent.id));
   } else if(currentDetailAchievement){
-    shareLink(location.origin + location.pathname + '#achievement-' + currentDetailAchievement.id);
+    shareLink(shareUrlFor('achievement', currentDetailAchievement.id));
   }
 }
 function shareEventById(id, evt){
   if(evt){ evt.stopPropagation(); }
-  shareLink(location.origin + location.pathname + '#event-' + id);
+  shareLink(shareUrlFor('event', id));
 }
 function shareAchievementById(id, evt){
   if(evt){ evt.stopPropagation(); }
-  shareLink(location.origin + location.pathname + '#achievement-' + id);
+  shareLink(shareUrlFor('achievement', id));
 }
 function shareNotice(id, evt){
   if(evt){ evt.stopPropagation(); }
-  shareLink(location.origin + location.pathname + '#notice-' + id);
+  shareLink(shareUrlFor('notice', id));
 }
 
 function handleDeepLink(){
