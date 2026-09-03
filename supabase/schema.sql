@@ -226,6 +226,37 @@ create policy "staff can update submissions" on public.pending_submissions
 create policy "staff can delete submissions" on public.pending_submissions
   for delete using (public.is_staff());
 
+-- ============================================================================
+-- VISITOR TRACKING
+-- ============================================================================
+-- Logs one row per site visit (not per page/section view), capturing only
+-- what a browser can report about itself - no IP address and no location,
+-- by design (that would need sending the visitor's IP to a third-party
+-- lookup service, which we're deliberately not doing).
+
+create table public.site_visits (
+  id uuid primary key default gen_random_uuid(),
+  visited_at timestamptz not null default now(),
+  page_path text,
+  referrer text,
+  user_agent text,
+  browser text,
+  os text,
+  device_type text,
+  session_id text
+);
+
+create index site_visits_visited_at_idx on public.site_visits (visited_at desc);
+
+alter table public.site_visits enable row level security;
+
+create policy "anyone can log a visit" on public.site_visits
+  for insert with check (true);
+create policy "staff can view visitor logs" on public.site_visits
+  for select using (public.is_staff());
+create policy "admin can clear visitor logs" on public.site_visits
+  for delete using (public.is_admin());
+
 -- Approve a pending submission: creates (or updates) the member record and
 -- deletes the pending row, in one atomic step. Call from the app with:
 --   supabase.rpc('approve_pending_submission', { submission_id: <id> })

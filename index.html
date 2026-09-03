@@ -764,6 +764,7 @@
       <button class="admin-panel-btn" data-panel="membership">Membership Form</button>
       <button class="admin-panel-btn" data-panel="notices">Notices</button>
       <button class="admin-panel-btn" data-panel="partners">Partners</button>
+      <button class="admin-panel-btn" data-panel="visitors">Visitors</button>
       <button class="admin-panel-btn" data-panel="accounts">Account Settings</button>
     </div>
 
@@ -911,6 +912,21 @@
         <button class="btn btn-primary btn-sm" onclick="addPartner()">Add Partner</button>
       </div>
       <div id="adminPartnerList" style="margin-top:14px;"></div>
+    </div>
+
+    <div id="panel-visitors" style="display:none;">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Site visitor log — one entry per visit (not per page). Only browser-reported info is captured: no IP address, no precise location.</p>
+      <div id="visitorStats" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+        <span style="font-size:12px;color:var(--muted);" id="visitorTableNote"></span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="downloadVisitorsExcel()">Download Excel</button>
+          <button class="btn btn-ghost btn-sm" id="clearVisitorsBtn" style="display:none;" onclick="clearVisitorLogs()">Clear All Logs</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="member-table" id="visitorTable" style="min-width:720px;"></table>
+      </div>
     </div>
   </div>
 </section>
@@ -2021,6 +2037,124 @@ function downloadMembersExcel(){
   XLSX.writeFile(wb, "ACCEAA_GSTU_Members.xlsx");
 }
 
+// ============================================================================
+// VISITOR TRACKING
+// ============================================================================
+let visitorLogs = [];
+let visitorTotalCount = 0;
+
+async function loadVisits(){
+  const { count } = await sb.from('site_visits').select('*', { count:'exact', head:true });
+  visitorTotalCount = count || 0;
+  const { data, error } = await sb.from('site_visits').select('*').order('visited_at', { ascending:false }).limit(2000);
+  if(!error) visitorLogs = data || [];
+}
+
+function renderVisitorPanel(){
+  const statBox = (num, label) => `<div style="flex:1; min-width:120px; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:14px 16px;">
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600;">${num}</div>
+    <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">${label}</div>
+  </div>`;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 6);
+  const todayCount = visitorLogs.filter(v => new Date(v.visited_at) >= today).length;
+  const weekCount = visitorLogs.filter(v => new Date(v.visited_at) >= weekAgo).length;
+  document.getElementById('visitorStats').innerHTML =
+    statBox(visitorTotalCount, 'Total Visits (All Time)') +
+    statBox(todayCount, 'Today') +
+    statBox(weekCount, 'Last 7 Days');
+
+  document.getElementById('visitorTableNote').textContent = visitorTotalCount > visitorLogs.length
+    ? `Showing the most recent ${visitorLogs.length.toLocaleString()} of ${visitorTotalCount.toLocaleString()} visits — Download Excel exports these same ${visitorLogs.length.toLocaleString()}.`
+    : `${visitorTotalCount.toLocaleString()} visit${visitorTotalCount===1?'':'s'} total.`;
+
+  const rows = visitorLogs.slice(0, 300).map(v => `
+    <tr>
+      <td>${new Date(v.visited_at).toLocaleString()}</td>
+      <td>${v.page_path || '/'}</td>
+      <td>${v.device_type || 'Unknown'}</td>
+      <td>${v.browser || 'Unknown'}</td>
+      <td>${v.os || 'Unknown'}</td>
+      <td>${v.referrer || 'Direct'}</td>
+    </tr>`).join('');
+  document.getElementById('visitorTable').innerHTML = `
+    <thead><tr><th>Time</th><th>Page</th><th>Device</th><th>Browser</th><th>OS</th><th>Referrer</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="6" style="color:var(--muted);">No visits logged yet.</td></tr>'}</tbody>`;
+}
+
+function downloadVisitorsExcel(){
+  const rows = visitorLogs.map(v => ({
+    Time: new Date(v.visited_at).toLocaleString(),
+    Page: v.page_path || '/',
+    Device: v.device_type || 'Unknown',
+    Browser: v.browser || 'Unknown',
+    OS: v.os || 'Unknown',
+    Referrer: v.referrer || 'Direct',
+    "Session ID": v.session_id || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Visitors");
+  XLSX.writeFile(wb, "ACCEAA_GSTU_Visitors.xlsx");
+}
+
+async function clearVisitorLogs(){
+  if(!confirm('Delete ALL visitor log entries? This cannot be undone.')) return;
+  await sb.from('site_visits').delete().not('id', 'is', null);
+  await loadVisits();
+  renderVisitorPanel();
+}
+
+// Logs one row per visit (not per page view) - fired once per browser
+// session via sessionStorage, so navigating between tabs on the site
+// doesn't inflate the count. Only browser-reported info: no IP, no
+// location. Never allowed to break the page if it fails.
+function parseUserAgent(ua){
+  ua = ua || '';
+  let device = 'Desktop';
+  if(/iPad|Tablet/i.test(ua)) device = 'Tablet';
+  else if(/Mobi|iPhone|Android.*Mobile/i.test(ua)) device = 'Mobile';
+
+  let browser = 'Other';
+  if(/Edg\//i.test(ua)) browser = 'Edge';
+  else if(/OPR\//i.test(ua)) browser = 'Opera';
+  else if(/Chrome\//i.test(ua)) browser = 'Chrome';
+  else if(/Firefox\//i.test(ua)) browser = 'Firefox';
+  else if(/Safari\//i.test(ua)) browser = 'Safari';
+
+  let os = 'Other';
+  if(/Windows/i.test(ua)) os = 'Windows';
+  else if(/Android/i.test(ua)) os = 'Android';
+  else if(/iPhone|iPad|iPod|iOS/i.test(ua)) os = 'iOS';
+  else if(/Mac OS/i.test(ua)) os = 'macOS';
+  else if(/Linux/i.test(ua)) os = 'Linux';
+
+  return { device, browser, os };
+}
+
+async function logVisit(){
+  try{
+    if(sessionStorage.getItem('acceaa_visit_logged')) return;
+    sessionStorage.setItem('acceaa_visit_logged', '1');
+
+    let sessionId = sessionStorage.getItem('acceaa_session_id');
+    if(!sessionId){
+      sessionId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
+      sessionStorage.setItem('acceaa_session_id', sessionId);
+    }
+
+    const ua = navigator.userAgent;
+    const { device, browser, os } = parseUserAgent(ua);
+    await sb.from('site_visits').insert({
+      page_path: location.pathname + location.hash,
+      referrer: document.referrer || null,
+      user_agent: ua,
+      browser, os, device_type: device,
+      session_id: sessionId
+    });
+  }catch(e){ /* visitor logging must never break the site */ }
+}
+
 function downloadMembersPDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -2174,10 +2308,13 @@ async function loginAsUI(){
     : 'No form uploaded yet — the public download button currently generates a basic placeholder form.';
   fillFeeFormInputs();
 
-  await Promise.all([loadStaffMembers(), loadPending()]);
+  document.getElementById('clearVisitorsBtn').style.display = isAdmin ? 'inline-block' : 'none';
+
+  await Promise.all([loadStaffMembers(), loadPending(), loadVisits()]);
   renderMemberTable(); renderPending();
   renderAdminNoticeList(); renderAdminPartnerList();
   renderAdminEventList(); renderAdminAchievementList();
+  renderVisitorPanel();
 
   if(isAdmin){
     await loadCommittee(); renderAdminCommitteeList();
@@ -2197,7 +2334,7 @@ function logout(){
 document.querySelectorAll('.admin-panel-btn').forEach(b=>b.addEventListener('click',()=>showPanel(b.dataset.panel)));
 function showPanel(name){
   document.querySelectorAll('.admin-panel-btn').forEach(b=>b.classList.toggle('active', b.dataset.panel===name));
-  ['events','members','achievements','committee','membership','notices','partners','accounts'].forEach(p=>document.getElementById('panel-'+p).style.display = p===name ? 'block':'none');
+  ['events','members','achievements','committee','membership','notices','partners','visitors','accounts'].forEach(p=>document.getElementById('panel-'+p).style.display = p===name ? 'block':'none');
 }
 
 // ============================================================================
@@ -2263,6 +2400,7 @@ populateSessionSelect('fPassingYear');
 populateSessionSelect('achBatch');
 populateSessionSelect('cmBatch');
 loadPublicData();
+logVisit();
 (async function initSession(){
   const { data:{ session } } = await sb.auth.getSession();
   if(session) await enterAdminSession();
