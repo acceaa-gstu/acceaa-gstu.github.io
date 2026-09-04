@@ -915,17 +915,26 @@
     </div>
 
     <div id="panel-visitors" style="display:none;">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Site visitor log — one entry per visit (not per page). Only browser-reported info is captured: no IP address, no precise location.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Site visitor log — one entry per visit (not per page). Only browser-reported info is captured: no IP address, no precise location. "Visitor" is a code (U0001...) for the same returning browser/device, not a real identity.</p>
       <div id="visitorStats" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;"></div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
         <span style="font-size:12px;color:var(--muted);" id="visitorTableNote"></span>
         <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="refreshVisitorPanel()">Refresh</button>
           <button class="btn btn-ghost btn-sm" onclick="downloadVisitorsExcel()">Download Excel</button>
           <button class="btn btn-ghost btn-sm" id="clearVisitorsBtn" style="display:none;" onclick="clearVisitorLogs()">Clear All Logs</button>
         </div>
       </div>
       <div style="overflow-x:auto;">
-        <table class="member-table" id="visitorTable" style="min-width:720px;"></table>
+        <table class="member-table" id="visitorTable" style="min-width:760px;"></table>
+      </div>
+
+      <div style="margin:30px 0 14px; padding-top:18px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h4 style="font-size:15px; margin:0;">Member Contact-Link Clicks <span style="font-weight:400; color:var(--muted); font-size:12.5px;">(LinkedIn/Facebook/WhatsApp/Email clicked from the directory)</span></h4>
+        <button class="btn btn-ghost btn-sm" onclick="downloadLinkClicksExcel()">Download Excel</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="member-table" id="linkClicksTable" style="min-width:600px;"></table>
       </div>
     </div>
   </div>
@@ -1307,6 +1316,20 @@ function renderLedgerFilters(){
 const MEMBER_PAGE_SIZE = 24;
 let memberDisplayCount = MEMBER_PAGE_SIZE;
 
+// Fire-and-forget: logs which member's contact link a visitor clicked.
+// Never calls preventDefault - the link opens exactly as it would have.
+function logLinkClick(memberId, linkType){
+  try{
+    const m = alumniPublic.find(x => x.id === memberId);
+    sb.from('member_link_clicks').insert({
+      member_id: memberId,
+      member_name: m ? m.name : null,
+      link_type: linkType,
+      visitor_id: currentVisitorId
+    });
+  }catch(e){ /* a click must never fail to open because of this */ }
+}
+
 function memberCardHTML(a){
   return `
     <div class="card" onclick="openModal('${a.id}')">
@@ -1315,10 +1338,10 @@ function memberCardHTML(a){
         <h3>${a.name}</h3><div class="role">${a.role||''}</div>
         <div class="tags"><span class="tag">Session ${formatSession(a.batch)}</span></div>
         <div class="card-social" onclick="event.stopPropagation()">
-          ${a.linkedin ? `<a class="soc-btn soc-li" href="${normalizeUrl(a.linkedin)}" target="_blank" title="LinkedIn">in</a>` : ''}
-          ${a.facebook ? `<a class="soc-btn soc-fb" href="${normalizeUrl(a.facebook)}" target="_blank" title="Facebook">f</a>` : ''}
-          ${a.publicMobile ? `<a class="soc-btn soc-wa" href="${toWhatsAppLink(a.publicMobile)}" target="_blank" title="WhatsApp">${WHATSAPP_ICON_SVG}</a>` : ''}
-          ${a.email ? `<a class="soc-btn soc-em" href="mailto:${a.email}" title="Email">@</a>` : ''}
+          ${a.linkedin ? `<a class="soc-btn soc-li" href="${normalizeUrl(a.linkedin)}" target="_blank" title="LinkedIn" onclick="logLinkClick('${a.id}','linkedin')">in</a>` : ''}
+          ${a.facebook ? `<a class="soc-btn soc-fb" href="${normalizeUrl(a.facebook)}" target="_blank" title="Facebook" onclick="logLinkClick('${a.id}','facebook')">f</a>` : ''}
+          ${a.publicMobile ? `<a class="soc-btn soc-wa" href="${toWhatsAppLink(a.publicMobile)}" target="_blank" title="WhatsApp" onclick="logLinkClick('${a.id}','whatsapp')">${WHATSAPP_ICON_SVG}</a>` : ''}
+          ${a.email ? `<a class="soc-btn soc-em" href="mailto:${a.email}" title="Email" onclick="logLinkClick('${a.id}','email')">@</a>` : ''}
         </div>
       </div>
     </div>`;
@@ -2051,12 +2074,24 @@ function downloadMembersExcel(){
 // ============================================================================
 let visitorLogs = [];
 let visitorTotalCount = 0;
+let linkClickLogs = [];
 
 async function loadVisits(){
   const { count } = await sb.from('site_visits').select('*', { count:'exact', head:true });
   visitorTotalCount = count || 0;
   const { data, error } = await sb.from('site_visits').select('*').order('visited_at', { ascending:false }).limit(2000);
   if(!error) visitorLogs = data || [];
+
+  const { data:clicks, error:clickErr } = await sb.from('member_link_clicks').select('*').order('clicked_at', { ascending:false }).limit(2000);
+  if(!clickErr) linkClickLogs = clicks || [];
+}
+
+// Re-pulls fresh data into the Visitors panel - the panel otherwise only
+// loads once, when you log in, so time spent on the site after that won't
+// show up until you refresh.
+async function refreshVisitorPanel(){
+  await loadVisits();
+  renderVisitorPanel();
 }
 
 function renderVisitorPanel(){
@@ -2085,6 +2120,7 @@ function renderVisitorPanel(){
   const rows = visitorLogs.slice(0, 300).map(v => `
     <tr>
       <td>${new Date(v.visited_at).toLocaleString()}</td>
+      <td>${formatVisitorCode(v.visitor_id)}</td>
       <td>${v.page_path || '/'}</td>
       <td>${formatDuration(v.duration_seconds)}</td>
       <td>${v.device_type || 'Unknown'}</td>
@@ -2093,8 +2129,19 @@ function renderVisitorPanel(){
       <td>${v.referrer || 'Direct'}</td>
     </tr>`).join('');
   document.getElementById('visitorTable').innerHTML = `
-    <thead><tr><th>Time</th><th>Page</th><th>Time on Site</th><th>Device</th><th>Browser</th><th>OS</th><th>Referrer</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="7" style="color:var(--muted);">No visits logged yet.</td></tr>'}</tbody>`;
+    <thead><tr><th>Time</th><th>Visitor</th><th>Page</th><th>Time on Site</th><th>Device</th><th>Browser</th><th>OS</th><th>Referrer</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="8" style="color:var(--muted);">No visits logged yet.</td></tr>'}</tbody>`;
+
+  const clickRows = linkClickLogs.slice(0, 300).map(c => `
+    <tr>
+      <td>${new Date(c.clicked_at).toLocaleString()}</td>
+      <td>${formatVisitorCode(c.visitor_id)}</td>
+      <td>${c.member_name || '(deleted member)'}</td>
+      <td style="text-transform:capitalize;">${c.link_type}</td>
+    </tr>`).join('');
+  document.getElementById('linkClicksTable').innerHTML = `
+    <thead><tr><th>Time</th><th>Visitor</th><th>Member</th><th>Link</th></tr></thead>
+    <tbody>${clickRows || '<tr><td colspan="4" style="color:var(--muted);">No clicks logged yet.</td></tr>'}</tbody>`;
 }
 
 // Formats seconds as "45s", "3m 12s", or "1h 05m" for the panel/Excel.
@@ -2110,6 +2157,7 @@ function formatDuration(sec){
 function downloadVisitorsExcel(){
   const rows = visitorLogs.map(v => ({
     Time: new Date(v.visited_at).toLocaleString(),
+    Visitor: formatVisitorCode(v.visitor_id),
     Page: v.page_path || '/',
     "Time on Site": formatDuration(v.duration_seconds),
     Device: v.device_type || 'Unknown',
@@ -2124,9 +2172,23 @@ function downloadVisitorsExcel(){
   XLSX.writeFile(wb, "ACCEAA_GSTU_Visitors.xlsx");
 }
 
+function downloadLinkClicksExcel(){
+  const rows = linkClickLogs.map(c => ({
+    Time: new Date(c.clicked_at).toLocaleString(),
+    Visitor: formatVisitorCode(c.visitor_id),
+    Member: c.member_name || '(deleted member)',
+    Link: c.link_type
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Link Clicks");
+  XLSX.writeFile(wb, "ACCEAA_GSTU_Member_Link_Clicks.xlsx");
+}
+
 async function clearVisitorLogs(){
-  if(!confirm('Delete ALL visitor log entries? This cannot be undone.')) return;
+  if(!confirm('Delete ALL visitor logs AND member link-click logs? This cannot be undone.')) return;
   await sb.from('site_visits').delete().not('id', 'is', null);
+  await sb.from('member_link_clicks').delete().not('id', 'is', null);
   await loadVisits();
   renderVisitorPanel();
 }
@@ -2158,10 +2220,36 @@ function parseUserAgent(ua){
   return { device, browser, os };
 }
 
+// A random id kept in localStorage (not sessionStorage - it survives the
+// tab closing, so the same browser/device is recognized on a later visit
+// too) identifies this device to get_or_create_visitor(), which hands back
+// a small sequential number - displayed as "U0001" etc in the admin panel.
+// This is a bigger, longer-lived tracking step than the per-tab session_id
+// above; the tradeoff was discussed and chosen deliberately.
+let currentVisitorId = null;
+
+async function ensureVisitorIdentity(){
+  try{
+    let deviceId = localStorage.getItem('acceaa_device_id');
+    if(!deviceId){
+      deviceId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
+      localStorage.setItem('acceaa_device_id', deviceId);
+    }
+    const { data, error } = await sb.rpc('get_or_create_visitor', { p_device_id: deviceId });
+    if(!error) currentVisitorId = data;
+  }catch(e){ /* visitor identity must never break the site */ }
+}
+
+// Formats a site_visitors.id as "U0001" for display; null/unknown -> "—".
+function formatVisitorCode(id){
+  return id ? 'U' + String(id).padStart(4, '0') : '—';
+}
+
 let visitRowId = null;
 let visitStartTime = null;
 
 async function logVisit(){
+  await ensureVisitorIdentity();
   try{
     if(sessionStorage.getItem('acceaa_visit_logged')) return;
     sessionStorage.setItem('acceaa_visit_logged', '1');
@@ -2185,7 +2273,8 @@ async function logVisit(){
       referrer: document.referrer || null,
       user_agent: ua,
       browser, os, device_type: device,
-      session_id: sessionId
+      session_id: sessionId,
+      visitor_id: currentVisitorId
     };
     if(newId) payload.id = newId; // else let the DB default generate one - duration just won't be tracked for this visit
     const { error } = await sb.from('site_visits').insert(payload);
