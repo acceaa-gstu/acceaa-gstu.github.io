@@ -243,7 +243,8 @@ create table public.site_visits (
   browser text,
   os text,
   device_type text,
-  session_id text
+  session_id text,
+  duration_seconds integer not null default 0
 );
 
 create index site_visits_visited_at_idx on public.site_visits (visited_at desc);
@@ -256,6 +257,21 @@ create policy "staff can view visitor logs" on public.site_visits
   for select using (public.is_staff());
 create policy "admin can clear visitor logs" on public.site_visits
   for delete using (public.is_admin());
+
+-- No general anonymous UPDATE policy on site_visits - instead, this one
+-- narrow RPC lets the page report how long a visit lasted, touching only
+-- duration_seconds on the one row it just inserted. security definer so it
+-- can write despite there being no UPDATE policy; the anon role can EXECUTE
+-- it but can't otherwise touch the table.
+create or replace function public.update_visit_duration(visit_id uuid, seconds int)
+returns void
+language sql security definer
+set search_path = public
+as $$
+  update public.site_visits set duration_seconds = greatest(0, seconds) where id = visit_id;
+$$;
+
+grant execute on function public.update_visit_duration(uuid, int) to anon, authenticated;
 
 -- Approve a pending submission: creates (or updates) the member record and
 -- deletes the pending row, in one atomic step. Call from the app with:

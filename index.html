@@ -2068,10 +2068,15 @@ function renderVisitorPanel(){
   const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 6);
   const todayCount = visitorLogs.filter(v => new Date(v.visited_at) >= today).length;
   const weekCount = visitorLogs.filter(v => new Date(v.visited_at) >= weekAgo).length;
+  const withDuration = visitorLogs.filter(v => (v.duration_seconds || 0) > 0);
+  const avgDuration = withDuration.length
+    ? withDuration.reduce((sum, v) => sum + v.duration_seconds, 0) / withDuration.length
+    : 0;
   document.getElementById('visitorStats').innerHTML =
     statBox(visitorTotalCount, 'Total Visits (All Time)') +
     statBox(todayCount, 'Today') +
-    statBox(weekCount, 'Last 7 Days');
+    statBox(weekCount, 'Last 7 Days') +
+    statBox(formatDuration(avgDuration), 'Avg. Time on Site');
 
   document.getElementById('visitorTableNote').textContent = visitorTotalCount > visitorLogs.length
     ? `Showing the most recent ${visitorLogs.length.toLocaleString()} of ${visitorTotalCount.toLocaleString()} visits — Download Excel exports these same ${visitorLogs.length.toLocaleString()}.`
@@ -2081,20 +2086,32 @@ function renderVisitorPanel(){
     <tr>
       <td>${new Date(v.visited_at).toLocaleString()}</td>
       <td>${v.page_path || '/'}</td>
+      <td>${formatDuration(v.duration_seconds)}</td>
       <td>${v.device_type || 'Unknown'}</td>
       <td>${v.browser || 'Unknown'}</td>
       <td>${v.os || 'Unknown'}</td>
       <td>${v.referrer || 'Direct'}</td>
     </tr>`).join('');
   document.getElementById('visitorTable').innerHTML = `
-    <thead><tr><th>Time</th><th>Page</th><th>Device</th><th>Browser</th><th>OS</th><th>Referrer</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="6" style="color:var(--muted);">No visits logged yet.</td></tr>'}</tbody>`;
+    <thead><tr><th>Time</th><th>Page</th><th>Time on Site</th><th>Device</th><th>Browser</th><th>OS</th><th>Referrer</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="7" style="color:var(--muted);">No visits logged yet.</td></tr>'}</tbody>`;
+}
+
+// Formats seconds as "45s", "3m 12s", or "1h 05m" for the panel/Excel.
+function formatDuration(sec){
+  sec = Math.max(0, Math.round(sec || 0));
+  if(sec < 60) return sec + 's';
+  const m = Math.floor(sec / 60), s = sec % 60;
+  if(m < 60) return `${m}m ${s}s`;
+  const h = Math.floor(m / 60), mm = m % 60;
+  return `${h}h ${String(mm).padStart(2,'0')}m`;
 }
 
 function downloadVisitorsExcel(){
   const rows = visitorLogs.map(v => ({
     Time: new Date(v.visited_at).toLocaleString(),
     Page: v.page_path || '/',
+    "Time on Site": formatDuration(v.duration_seconds),
     Device: v.device_type || 'Unknown',
     Browser: v.browser || 'Unknown',
     OS: v.os || 'Unknown',
@@ -2141,6 +2158,9 @@ function parseUserAgent(ua){
   return { device, browser, os };
 }
 
+let visitRowId = null;
+let visitStartTime = null;
+
 async function logVisit(){
   try{
     if(sessionStorage.getItem('acceaa_visit_logged')) return;
@@ -2154,13 +2174,58 @@ async function logVisit(){
 
     const ua = navigator.userAgent;
     const { device, browser, os } = parseUserAgent(ua);
-    await sb.from('site_visits').insert({
+    visitStartTime = Date.now();
+    // Generate the row's id client-side and insert it explicitly, rather
+    // than asking PostgREST to hand the inserted row back (.select()) -
+    // the SELECT policy on this table is staff-only, so an anonymous
+    // visitor's insert can't read its own row back; it can still write it.
+    const newId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
+    const payload = {
       page_path: location.pathname + location.hash,
       referrer: document.referrer || null,
       user_agent: ua,
       browser, os, device_type: device,
       session_id: sessionId
-    });
+    };
+    if(newId) payload.id = newId; // else let the DB default generate one - duration just won't be tracked for this visit
+    const { error } = await sb.from('site_visits').insert(payload);
+
+    if(!error && newId){
+      visitRowId = newId;
+      // Every 20s while the tab is open, report elapsed time so far - and
+      // once more, best-effort, the moment the tab is hidden/closed. Goes
+      // through a narrow security-definer RPC (update_visit_duration) that
+      // can only touch duration_seconds on this one row, not a general
+      // write grant on the table.
+      setInterval(reportVisitDuration, 20000);
+      document.addEventListener('visibilitychange', () => {
+        if(document.visibilityState === 'hidden') reportVisitDuration(true);
+      });
+      window.addEventListener('pagehide', () => reportVisitDuration(true));
+    }
+  }catch(e){ /* visitor logging must never break the site */ }
+}
+
+function reportVisitDuration(final){
+  if(!visitRowId || !visitStartTime) return;
+  const seconds = Math.round((Date.now() - visitStartTime) / 1000);
+  try{
+    if(final){
+      // Page may be unloading right now - a normal fetch could get cut off
+      // mid-flight, so use keepalive to give it a chance to finish anyway.
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/update_visit_duration`, {
+        method: 'POST',
+        keepalive: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
+        },
+        body: JSON.stringify({ visit_id: visitRowId, seconds })
+      });
+    } else {
+      sb.rpc('update_visit_duration', { visit_id: visitRowId, seconds });
+    }
   }catch(e){ /* visitor logging must never break the site */ }
 }
 
