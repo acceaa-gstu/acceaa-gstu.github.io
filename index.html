@@ -1318,14 +1318,28 @@ let memberDisplayCount = MEMBER_PAGE_SIZE;
 
 // Fire-and-forget: logs which member's contact link a visitor clicked.
 // Never calls preventDefault - the link opens exactly as it would have.
+// Uses a plain fetch with keepalive (not the sb client) because the link
+// has target="_blank": on most browsers that opens a new tab and this page
+// keeps running, but on some in-app/embedded browsers (no tabs) the same
+// tap can navigate this very page away instead - keepalive gives the
+// request a chance to actually reach the server even if that happens.
 function logLinkClick(memberId, linkType){
   try{
     const m = alumniPublic.find(x => x.id === memberId);
-    sb.from('member_link_clicks').insert({
-      member_id: memberId,
-      member_name: m ? m.name : null,
-      link_type: linkType,
-      visitor_id: currentVisitorId
+    fetch(`${SUPABASE_URL}/rest/v1/member_link_clicks`, {
+      method: 'POST',
+      keepalive: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY
+      },
+      body: JSON.stringify({
+        member_id: memberId,
+        member_name: m ? m.name : null,
+        link_type: linkType,
+        visitor_id: currentVisitorId
+      })
     });
   }catch(e){ /* a click must never fail to open because of this */ }
 }
